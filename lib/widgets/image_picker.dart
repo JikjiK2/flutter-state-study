@@ -1,95 +1,87 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_state_mvvm/models/image_picker_model.dart';
-import 'package:flutter_state_mvvm/providers/image_picker_provider.dart';
-import 'package:flutter_state_mvvm/views/full_image_view.dart';
+import 'package:flutter_state_mvvm/widgets/image_picker/viewModel(Provider)/image_picker_provider.dart';
+import 'package:flutter_state_mvvm/widgets/image_picker/view/full_image_view.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:provider/provider.dart';
 
 class CustomImagePicker extends StatefulWidget {
+  const CustomImagePicker({super.key});
+
   @override
   State<CustomImagePicker> createState() => _CustomImagePickerState();
 }
 
 class _CustomImagePickerState extends State<CustomImagePicker> {
-  void updateSelectedAssetList(List<AssetEntity> updatedList) {
-    setState(() {
-      // selectedAssetList = updatedList;
-    });
-  }
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) {
-        final model = ImagePickerModel();
-        final viewModel = ImagePickerViewModel(model);
-        return viewModel;
-      },
-      child:
-          Consumer<ImagePickerViewModel>(builder: (context, viewModel, child) {
-        final state = viewModel.state;
-        if (state.errorMessage != null) {
-          return Center(
-            child: Text('Error: ${state.errorMessage}'),
-          );
-        }
-        return Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            elevation: 0,
-            title: DropdownButton<AssetPathEntity>(
-              value: state.selectedAlbum,
-              onChanged: (AssetPathEntity? value) {
-                //여기서 하는 일이 선택한 앨범 저장, 선택한 앨범의 이미지 목록 저장
-                viewModel.selectAlbum(value!);
-              },
-              items: state.albumList.map<DropdownMenuItem<AssetPathEntity>>(
-                  (AssetPathEntity album) {
-                return DropdownMenuItem<AssetPathEntity>(
-                  value: album,
-                  child: FutureBuilder<int>(
-                    future: album.assetCountAsync,
-                    builder: (context, snapshot) {
-                      String subtitle = "${snapshot.data}";
-                      return Text("${album.name} ($subtitle)");
-                    },
-                  ),
-                );
-              }).toList(),
-            ),
-            actions: [
-              GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context, viewModel.getSelectedPhotos());
-                  },
-                  child: const Center(
-                    child: Padding(
-                      padding: EdgeInsets.only(right: 15.0),
-                      child: Icon(Icons.check),
-                    ),
-                  ))
-            ],
-          ),
-          body: state.isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(),
-                )
-              : GridView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: state.assetList.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                  ),
-                  itemBuilder: (context, index) {
-                    AssetEntity assetEntity = state.assetList[index];
-                    return assetWidget(assetEntity, index);
-                  },
-                ),
-        );
-      }),
+    return Consumer<ImagePickerViewModel>(builder: (context, viewModel, child) {
+            final state = viewModel.state;
+            if (state.errorMessage != null) {
+    return Center(
+      child: Text('Error: ${state.errorMessage}'),
     );
+            }
+            return Scaffold(
+    appBar: AppBar(
+      automaticallyImplyLeading: false,
+      elevation: 0,
+      // 앨범 선택을 위한 버튼
+      title: DropdownButton<AssetPathEntity>(
+        value: state.selectedAlbum,
+        onChanged: (AssetPathEntity? value) {
+          // 선택한 앨범 저장, 선택한 앨범의 이미지 목록 저장
+          viewModel.selectAlbum(value!);
+        },
+        items: state.albumList.map<DropdownMenuItem<AssetPathEntity>>(
+            (AssetPathEntity album) {
+              // 각각의 앨범 이름 및 앨범 이미지 개수
+          return DropdownMenuItem<AssetPathEntity>(
+            value: album,
+            child: FutureBuilder<int>(
+              future: album.assetCountAsync,
+              builder: (context, snapshot) {
+                String subtitle = "${snapshot.data}";
+                return Text("${album.name} ($subtitle)");
+              },
+            ),
+          );
+        }).toList(),
+      ),
+      actions: [
+        // 이미지 선택 완료
+        GestureDetector(
+            onTap: () {
+              Navigator.pop(context, viewModel.getSelectedPhotos());
+            },
+            child: const Center(
+              child: Padding(
+                padding: EdgeInsets.only(right: 15.0),
+                child: Icon(Icons.check),
+              ),
+            ))
+      ],
+    ),
+    body: state.isLoading
+        ? const Center(
+            child: CircularProgressIndicator(),
+          )
+        : GridView.builder(
+            physics: const BouncingScrollPhysics(),
+            itemCount: state.assetList.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+            ),
+            itemBuilder: (context, index) {
+              AssetEntity assetEntity = state.assetList[index];
+              return assetWidget(assetEntity, index);
+            },
+          ),
+            );
+          });
   }
 
+  // GridView 표시될 각각의 요소 (이미지 1개)
   Widget assetWidget(AssetEntity assetEntity, int index) =>
       Consumer<ImagePickerViewModel>(
           builder: (context, viewModel, child) {
@@ -106,20 +98,21 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
         }
         return Stack(
           children: [
+            // 이미지 표시
             Positioned.fill(
               child: GestureDetector(
                 onTap: () {
-                  viewModel.SelectedImage(assetEntity);
+                  viewModel.selectedImage(assetEntity);
                 },
                 child: Container(
                   decoration: BoxDecoration(
                     border: Border.all(
                       color:
-                          state.selectedImages.contains(assetEntity)
+                      viewModel.selectedImages.contains(assetEntity)
                               ? Colors.blue
                               : Colors.transparent,
                       width:
-                          state.selectedImages.contains(assetEntity)
+                      viewModel.selectedImages.contains(assetEntity)
                               ? 3.0
                               : 3.0,
                     ),
@@ -141,21 +134,22 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
                 ),
               ),
             ),
+            // 동영상 우측 하단 동영상 길이 표시
             if (assetEntity.type == AssetType.video)
               Positioned.fill(
                 child: Align(
                   alignment: Alignment.bottomRight,
                   child: Padding(
-                    padding: EdgeInsets.all(5.0),
+                    padding: const EdgeInsets.all(5.0),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.black38,
                         borderRadius: BorderRadius.circular(3.0),
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 4.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
                       child: FutureBuilder<int?>(
                         future: assetEntity.durationWithOptions(),
-                        // 동영상 길이 가져오기
+                        // 동영상 길이
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             final duration = snapshot.data!;
@@ -168,22 +162,23 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
                                 minutes.toString().padLeft(2, '0');
                             String formattedSeconds =
                                 seconds.toString().padLeft(2, '0');
-                            if (hours == 0)
+                            if (hours == 0) {
                               return Text(
-                                '${formattedMinutes}:${formattedSeconds}',
-                                style: TextStyle(
+                                '$formattedMinutes:$formattedSeconds',
+                                style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 13.0,
                                     fontWeight: FontWeight.w400),
                               );
-                            else
+                            } else {
                               return Text(
-                                '${formattedHours}:${formattedMinutes}:${formattedSeconds}',
-                                style: TextStyle(
+                                '$formattedHours:$formattedMinutes:$formattedSeconds',
+                                style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 13.0,
                                     fontWeight: FontWeight.w400),
                               );
+                            }
                           } else {
                             return const SizedBox();
                           }
@@ -193,12 +188,13 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
                   ),
                 ),
               ),
+            // 이미지 선택 버튼
             Positioned.fill(
               child: Align(
                 alignment: Alignment.topRight,
                 child: GestureDetector(
                   onTap: () {
-                    viewModel.SelectedImage(assetEntity);
+                    viewModel.selectedImage(assetEntity);
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(7.0),
@@ -206,12 +202,12 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
                       width: 28.0,
                       height: 28.0,
                       decoration: BoxDecoration(
-                        color: state.selectedImages.contains(assetEntity)
+                        color: viewModel.selectedImages.contains(assetEntity)
                             ? Colors.blue
                             : Colors.white70,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: state.selectedImages.contains(assetEntity)
+                          color: viewModel.selectedImages.contains(assetEntity)
                               ? Colors.transparent
                               : Colors.black54,
                           width: 2.5,
@@ -219,11 +215,11 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
                       ),
                       child: Center(
                         child: Text(
-                          "${state.selectedImages.indexOf(assetEntity) + 1}",
+                          "${viewModel.selectedImages.indexOf(assetEntity) + 1}",
                           style: TextStyle(
                             fontSize: 13.0,
                             fontWeight: FontWeight.bold,
-                            color: state.selectedImages.contains(assetEntity)
+                            color: viewModel.selectedImages.contains(assetEntity)
                                 ? Colors.white
                                 : Colors.transparent,
                           ),
@@ -234,22 +230,19 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
                 ),
               ),
             ),
+            // 이미지 전체 화면 버튼
             Positioned.fill(
               child: Align(
                 alignment: Alignment.bottomLeft,
                 child: GestureDetector(
                   onTap: () {
+                    viewModel.setInitialIndexForFullScreen(assetEntity);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => FullScreenImage(
-                          selectedIndex: index,
-                          assetList: state.assetList,
-                          maxCount: state.maxSelectableCount,
-                          selectedAssetList: state.selectedImages,
-                          assetEntity: assetEntity,
-                          updateSelectedAssetList: updateSelectedAssetList,
-                        ),
+                        builder: (context) {
+                          return const FullScreenImage();
+                        },
                       ),
                     );
                   },
