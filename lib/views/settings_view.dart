@@ -1,25 +1,27 @@
 import 'package:flutter/material.dart';
 
 class SettingsView extends StatefulWidget {
+  const SettingsView({super.key});
+
   @override
   State<SettingsView> createState() => _SettingsViewState();
 }
 
 class _SettingsViewState extends State<SettingsView> {
-  bool _isExpanded = true;
-  bool _isDayExpanded = false;
+  final bool _isExpanded = true;
+  final bool _isDayExpanded = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         scrolledUnderElevation: 0.0,
-        title: Text(
+        title: const Text(
           '설정',
           style: TextStyle(color: Colors.black),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
+          icon: const Icon(Icons.arrow_back), // 뒤로가기 아이콘
           onPressed: () {
             Navigator.pop(context); // 이전 화면으로 돌아가기
           },
@@ -28,16 +30,16 @@ class _SettingsViewState extends State<SettingsView> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.only(bottom: 100.0),
+          padding: const EdgeInsets.only(bottom: 100.0),
           child: Center(
             child: Column(
               children: [
-                Container(
+                SizedBox(
                   height: 400.0,
                   width: double.infinity,
                   child: Padding(
                     padding:
-                        EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
+                        const EdgeInsets.symmetric(vertical: 20.0, horizontal: 20.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -45,14 +47,14 @@ class _SettingsViewState extends State<SettingsView> {
                           height: 10.0,
                         ),
                         Container(
-                          child: Column(
+                          child: const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 "프로필 관리",
                                 style: TextStyle(fontSize: 20.0),
                               ),
-                              const SizedBox(
+                              SizedBox(
                                 height: 5.0,
                               ),
                               Text(
@@ -66,21 +68,21 @@ class _SettingsViewState extends State<SettingsView> {
                           height: 15.0,
                         ),
                         Container(
-                          child: Column(
+                          child: const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 "알림 설정",
                                 style: TextStyle(fontSize: 20.0),
                               ),
-                              const SizedBox(
+                              SizedBox(
                                 height: 5.0,
                               ),
                               Text(
                                 "- 푸시 알림 사용/중지",
                                 style: TextStyle(fontSize: 16.0),
                               ),
-                              const SizedBox(
+                              SizedBox(
                                 height: 5.0,
                               ),
                               Text(
@@ -94,14 +96,14 @@ class _SettingsViewState extends State<SettingsView> {
                           height: 15.0,
                         ),
                         Container(
-                          child: Column(
+                          child: const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 "언어 설정",
                                 style: TextStyle(fontSize: 20.0),
                               ),
-                              const SizedBox(
+                              SizedBox(
                                 height: 5.0,
                               ),
                               Text(
@@ -115,21 +117,21 @@ class _SettingsViewState extends State<SettingsView> {
                           height: 15.0,
                         ),
                         Container(
-                          child: Column(
+                          child: const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 "계정 관리",
                                 style: TextStyle(fontSize: 20.0),
                               ),
-                              const SizedBox(
+                              SizedBox(
                                 height: 5.0,
                               ),
                               Text(
                                 "- 로그아웃",
                                 style: TextStyle(fontSize: 16.0),
                               ),
-                              const SizedBox(
+                              SizedBox(
                                 height: 5.0,
                               ),
                               Text(
@@ -147,7 +149,7 @@ class _SettingsViewState extends State<SettingsView> {
                   color: Colors.grey.shade500,
                   height: 200.0,
                   width: double.infinity,
-                  child: Padding(
+                  child: const Padding(
                     padding:
                         EdgeInsets.symmetric(horizontal: 25.0, vertical: 30.0),
                     child: Column(
@@ -161,21 +163,21 @@ class _SettingsViewState extends State<SettingsView> {
                             ),
                           ],
                         ),
-                        const SizedBox(
+                        SizedBox(
                           height: 5.0,
                         ),
                         Text(
                           " - 고객 지원",
                           style: TextStyle(fontSize: 16.0),
                         ),
-                        const SizedBox(
+                        SizedBox(
                           height: 5.0,
                         ),
                         Text(
                           " - FAQ",
                           style: TextStyle(fontSize: 16.0),
                         ),
-                        const SizedBox(
+                        SizedBox(
                           height: 5.0,
                         ),
                         Text(

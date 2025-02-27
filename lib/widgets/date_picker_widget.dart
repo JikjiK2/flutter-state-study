@@ -1,14 +1,15 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Date Range Picker',
       home: DateRangePickerScreen1(),
     );
@@ -16,6 +17,8 @@ class MyApp extends StatelessWidget {
 }
 
 class DateRangePickerScreen1 extends StatefulWidget {
+  const DateRangePickerScreen1({super.key});
+
   @override
   _DateRangePickerScreenState createState() => _DateRangePickerScreenState();
 }
@@ -29,9 +32,9 @@ class _DateRangePickerScreenState extends State<DateRangePickerScreen1> {
       context: context,
       initialDateRange: selectedStartDate != null && selectedEndDate != null
           ? DateTimeRange(start: selectedStartDate!, end: selectedEndDate!)
-          : DateTimeRange(start: DateTime.now(), end: DateTime.now().add(Duration(days: 1))),
+          : DateTimeRange(start: DateTime.now(), end: DateTime.now().add(const Duration(days: 1))),
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(Duration(days: 120)), // 120일 후까지 선택 가능
+      lastDate: DateTime.now().add(const Duration(days: 120)), // 120일 후까지 선택 가능
     );
 
     if (pickedRange != null) {
@@ -46,7 +49,7 @@ class _DateRangePickerScreenState extends State<DateRangePickerScreen1> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Date Range Picker'),
+        title: const Text('Date Range Picker'),
       ),
       body: Center(
         child: Column(
@@ -54,7 +57,7 @@ class _DateRangePickerScreenState extends State<DateRangePickerScreen1> {
           children: <Widget>[
             // 날짜 선택 안내 텍스트
             if (selectedStartDate == null && selectedEndDate == null)
-              Text(
+              const Text(
                 '날짜를 선택하세요',
                 style: TextStyle(fontSize: 20, color: Colors.grey),
               ),
@@ -62,17 +65,17 @@ class _DateRangePickerScreenState extends State<DateRangePickerScreen1> {
             if (selectedStartDate != null)
               Text(
                 '시작 날짜: ${selectedStartDate!.toLocal().toString().split(' ')[0]}',
-                style: TextStyle(fontSize: 20),
+                style: const TextStyle(fontSize: 20),
               ),
             if (selectedEndDate != null)
               Text(
                 '종료 날짜: ${selectedEndDate!.toLocal().toString().split(' ')[0]}',
-                style: TextStyle(fontSize: 20),
+                style: const TextStyle(fontSize: 20),
               ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => _selectDateRange(context),
-              child: Text('Select Date Range'),
+              child: const Text('Select Date Range'),
             ),
           ],
         ),

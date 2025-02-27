@@ -3,13 +3,13 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 
 class customDateRangePicker {
   static Future<List<DateTime?>?> showCalendarDialog(BuildContext context) async {
-    List<DateTime?> _dialogCalendarPickerValue = [
+    List<DateTime?> dialogCalendarPickerValue = [
       DateTime.now(),
       DateTime.now().add(const Duration(days: 4)),
     ];
-    final dayTextStyle = TextStyle(
+    const dayTextStyle = TextStyle(
         color: Colors.black, fontWeight: FontWeight.w600);
-    final weekendTextStyle = TextStyle(
+    const weekendTextStyle = TextStyle(
         color: Colors.black, fontWeight: FontWeight.w600);
     final anniversaryTextStyle = TextStyle(
       color: Colors.red[400],
@@ -135,7 +135,7 @@ class customDateRangePicker {
       config: config,
       dialogSize: const Size(325, 860),
       borderRadius: BorderRadius.circular(15),
-      value: _dialogCalendarPickerValue,
+      value: dialogCalendarPickerValue,
       dialogBackgroundColor: Colors.white,
     );
   }

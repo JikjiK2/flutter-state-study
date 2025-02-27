@@ -2,21 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'DatePicker',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: DateRangePickerScreen(),
+      home: const DateRangePickerScreen(),
     );
   }
 }
 
 class DateRangePickerScreen extends StatefulWidget {
+  const DateRangePickerScreen({super.key});
+
   @override
   _DateRangePickerScreenState createState() => _DateRangePickerScreenState();
 }
@@ -55,17 +59,17 @@ class _DateRangePickerScreenState extends State<DateRangePickerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select Date Range'),
+        title: const Text('Select Date Range'),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           TableCalendar(
-            availableCalendarFormats: {
+            availableCalendarFormats: const {
               CalendarFormat.month: '한 달',
             },
-            firstDay: DateTime.now().subtract(Duration(days: 120)),
-            lastDay: DateTime.now().add(Duration(days: 120)),
+            firstDay: DateTime.now().subtract(const Duration(days: 120)),
+            lastDay: DateTime.now().add(const Duration(days: 120)),
             focusedDay: _focusedDay,
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
             calendarFormat: _calendarFormat,
@@ -75,7 +79,7 @@ class _DateRangePickerScreenState extends State<DateRangePickerScreen> {
             rangeSelectionMode: RangeSelectionMode.toggledOn,
             onRangeSelected: _onRangeSelected,
             rangeEndDay: _rangeEnd,
-            calendarStyle: CalendarStyle(
+            calendarStyle: const CalendarStyle(
               outsideDaysVisible: false,
             ),
             onFormatChanged: (format) {

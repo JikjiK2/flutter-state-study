@@ -14,6 +14,8 @@ Future<void> addTrip(String destination, DateTime date) {
 }
 
 class CreateTripView extends StatefulWidget {
+  const CreateTripView({super.key});
+
   @override
   State<CreateTripView> createState() => _CreateTripViewState();
 }
@@ -27,19 +29,19 @@ class _CreateTripViewState extends State<CreateTripView> {
     return Scaffold(
       appBar: AppBar(
         scrolledUnderElevation: 0.0,
-        title: Text(
+        title: const Text(
           'data',
           style: TextStyle(color: Colors.black),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
+          icon: const Icon(Icons.arrow_back), // 뒤로가기 아이콘
           onPressed: () {
             Navigator.pop(context); // 이전 화면으로 돌아가기
           },
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.file_upload_outlined),
+            icon: const Icon(Icons.file_upload_outlined),
             color: Colors.black,
             onPressed: () {
               // 프로필 아이콘 클릭 시 동작
@@ -47,7 +49,7 @@ class _CreateTripViewState extends State<CreateTripView> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.map_outlined),
+            icon: const Icon(Icons.map_outlined),
             color: Colors.black,
             onPressed: () {
               // 프로필 아이콘 클릭 시 동작
@@ -55,7 +57,7 @@ class _CreateTripViewState extends State<CreateTripView> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.check),
+            icon: const Icon(Icons.check),
             color: Colors.black,
             onPressed: () {
               addTrip('부산',DateTime.now());
@@ -68,7 +70,7 @@ class _CreateTripViewState extends State<CreateTripView> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.only(bottom: 100.0),
+          padding: const EdgeInsets.only(bottom: 100.0),
           child: Center(
             child: Column(
               children: [
@@ -77,12 +79,12 @@ class _CreateTripViewState extends State<CreateTripView> {
                 ),
                 Padding(
                   padding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                      const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                   child: Column(
                     children: [
                       Row(
                         children: [
-                          Text(
+                          const Text(
                             '부산 여행',
                             style: TextStyle(
                                 fontSize: 30.0, fontWeight: FontWeight.bold),
@@ -131,13 +133,13 @@ class _CreateTripViewState extends State<CreateTripView> {
                   ),
                 ),
                 AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  decoration: BoxDecoration(color: Colors.grey),
+                  duration: const Duration(milliseconds: 200),
+                  decoration: const BoxDecoration(color: Colors.grey),
                   width: double.infinity,
                   height: _isExpanded ? 250 : 0,
                   alignment: Alignment.center,
                   // child: KakaoMap(),
-                  child: Text('지도'),
+                  child: const Text('지도'),
                 ),
                 GestureDetector(
                   behavior: HitTestBehavior.opaque,
@@ -149,7 +151,7 @@ class _CreateTripViewState extends State<CreateTripView> {
                   },
                   child: Container(
                     padding:
-                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
+                        const EdgeInsets.symmetric(vertical: 10.0, horizontal: 5.0),
                     // width: double.infinity,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -170,12 +172,12 @@ class _CreateTripViewState extends State<CreateTripView> {
                 Container(
                   child: Padding(
                     padding:
-                        EdgeInsets.symmetric(vertical: 0.0, horizontal: 20.0),
+                        const EdgeInsets.symmetric(vertical: 0.0, horizontal: 20.0),
                     child: Column(
                       children: [
                         Row(
                           children: [
-                            Text(
+                            const Text(
                               'day1',
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 18.0),
@@ -197,7 +199,7 @@ class _CreateTripViewState extends State<CreateTripView> {
                                 });
                               },
                               child: Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                     vertical: 10.0, horizontal: 5.0),
                                 // width: double.infinity,
                                 child: Row(
@@ -219,11 +221,11 @@ class _CreateTripViewState extends State<CreateTripView> {
                           ],
                         ),
                         AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
-                          decoration: BoxDecoration(color: Colors.grey),
+                          duration: const Duration(milliseconds: 200),
+                          decoration: const BoxDecoration(color: Colors.grey),
                           width: double.infinity,
                           height: 200.0,
-                          child: Padding(
+                          child: const Padding(
                             padding: EdgeInsets.symmetric(
                                 vertical: 5.0, horizontal: 15.0),
                             child: Text('셀프패키지'),
@@ -246,7 +248,7 @@ class _CreateTripViewState extends State<CreateTripView> {
                                     side: BorderSide(color: Colors.grey.shade400, width: 1.3)
                                   ),
                                 ),
-                                child: Text('장소 추가', style: TextStyle(fontWeight: FontWeight.bold),),
+                                child: const Text('장소 추가', style: TextStyle(fontWeight: FontWeight.bold),),
                               ),
                             ),
                             const SizedBox(width: 10.0),
@@ -263,7 +265,7 @@ class _CreateTripViewState extends State<CreateTripView> {
                                       side: BorderSide(color: Colors.grey.shade400, width: 1.3)
                                   ),
                                 ),
-                                child: Text('메모 추가', style: TextStyle(fontWeight: FontWeight.bold),),
+                                child: const Text('메모 추가', style: TextStyle(fontWeight: FontWeight.bold),),
                               ),
                             ),
                           ],

@@ -4,6 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class LoginView extends StatefulWidget {
+  const LoginView({super.key});
+
   @override
   _LoginViewState createState() => _LoginViewState();
 }
@@ -30,7 +32,7 @@ class _LoginViewState extends State<LoginView> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
+            icon: const Icon(Icons.arrow_back), // 뒤로가기 아이콘
             onPressed: () {
               Navigator.pop(context); // 이전 화면으로 돌아가기
             },
@@ -57,7 +59,7 @@ class _LoginViewState extends State<LoginView> {
                       children: [
                         const Row(
                           children: [
-                            const Text(
+                            Text(
                               "이메일 주소",
                             ),
                           ],
@@ -75,7 +77,7 @@ class _LoginViewState extends State<LoginView> {
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(5.0),
                                 borderSide:
-                                    BorderSide(color: Colors.black, width: 2.0),
+                                    const BorderSide(color: Colors.black, width: 2.0),
                               ),
                               enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(5.0),
@@ -83,7 +85,7 @@ class _LoginViewState extends State<LoginView> {
                                       color: Color.fromRGBO(125, 125, 125, 0.4),
                                       width: 2.0)),
                               hintText: 'Email',
-                              suffixIcon: EmailController.text.length > 0
+                              suffixIcon: EmailController.text.isNotEmpty
                                   ? IconButton(
                                       icon: const Icon(Icons.cancel),
                                       color: Colors.grey,
@@ -127,7 +129,7 @@ class _LoginViewState extends State<LoginView> {
                           autocorrect: false,
                           obscureText: _passwordVisible,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                                 vertical: 15, horizontal: 15),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(5.0),
@@ -142,8 +144,8 @@ class _LoginViewState extends State<LoginView> {
                             hintText: 'Password',
                             suffixIcon: IconButton(
                               icon: _passwordVisible
-                                  ? Icon(Icons.visibility_off)
-                                  : Icon(Icons.visibility),
+                                  ? const Icon(Icons.visibility_off)
+                                  : const Icon(Icons.visibility),
                               color: Colors.grey,
                               highlightColor: Colors.transparent,
                               splashColor: Colors.transparent,
@@ -205,7 +207,7 @@ class _LoginViewState extends State<LoginView> {
                             ),
                           ),
                         ),
-                        Container(
+                        const SizedBox(
                           height: 25,
                           child: VerticalDivider(
                             thickness: 1.2,
@@ -224,9 +226,9 @@ class _LoginViewState extends State<LoginView> {
                             ),
                           ),
                         ),
-                        Container(
+                        const SizedBox(
                           height: 25,
-                          child: const VerticalDivider(
+                          child: VerticalDivider(
                             thickness: 1.2,
                             color: Color.fromRGBO(0, 0, 0, 0.7),
                           ),
@@ -243,7 +245,7 @@ class _LoginViewState extends State<LoginView> {
                               onPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => PrivacyPolicy()),
+                                  MaterialPageRoute(builder: (context) => const PrivacyPolicy()),
                                 );
                               },
                             ),
@@ -316,7 +318,7 @@ showCustom(BuildContext context, String msg) {
           child: Text(
             msg,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
         ),
       ],
@@ -359,7 +361,7 @@ class LoginButton extends StatelessWidget {
   final int textColor;
 
   const LoginButton(
-      {required this.iconPath,
+      {super.key, required this.iconPath,
       required this.label,
       required this.onPressed,
       required this.backColor,
@@ -370,7 +372,7 @@ class LoginButton extends StatelessWidget {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         splashFactory: NoSplash.splashFactory,
-        minimumSize: Size(250.0, 40.0),
+        minimumSize: const Size(250.0, 40.0),
         backgroundColor: Color(backColor),
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
         shape: RoundedRectangleBorder(
@@ -409,7 +411,7 @@ class GoogleLoginButton extends StatelessWidget {
   final int textColor;
 
   const GoogleLoginButton(
-      {required this.iconPath,
+      {super.key, required this.iconPath,
       required this.label,
       required this.onPressed,
       required this.backColor,
@@ -420,7 +422,7 @@ class GoogleLoginButton extends StatelessWidget {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         splashFactory: NoSplash.splashFactory,
-        minimumSize: Size(250.0, 40.0),
+        minimumSize: const Size(250.0, 40.0),
         backgroundColor: Color(backColor),
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
         shape: RoundedRectangleBorder(

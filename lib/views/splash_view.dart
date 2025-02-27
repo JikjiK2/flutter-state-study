@@ -3,6 +3,8 @@ import 'dart:async';
 import 'home_view.dart';
 
 class SplashView extends StatefulWidget {
+  const SplashView({super.key});
+
   @override
   _SplashViewState createState() => _SplashViewState();
 }
@@ -14,7 +16,7 @@ class _SplashViewState extends State<SplashView> {
     // 2초 후에 홈 화면으로 이동
     Timer(const Duration(seconds: 0), () {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => HomeView()),
+        MaterialPageRoute(builder: (context) => const HomeView()),
       );
     });
   }

@@ -9,7 +9,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({super.key, required this.title});
 
   final String title;
 
@@ -1049,11 +1049,11 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 Future<List<DateTime?>?> _showCalendarDialog(BuildContext context) async {
-  List<DateTime?> _dialogCalendarPickerValue = [
+  List<DateTime?> dialogCalendarPickerValue = [
     DateTime(2021, 8, 10),
     DateTime(2021, 8, 13),
   ];
-  final dayTextStyle = TextStyle(color: Colors.black, fontWeight: FontWeight.w700);
+  const dayTextStyle = TextStyle(color: Colors.black, fontWeight: FontWeight.w700);
   final weekendTextStyle = TextStyle(color: Colors.grey[500], fontWeight: FontWeight.w600);
   final anniversaryTextStyle = TextStyle(
     color: Colors.red[400],
@@ -1178,7 +1178,7 @@ Future<List<DateTime?>?> _showCalendarDialog(BuildContext context) async {
     config: config,
     dialogSize: const Size(325, 860),
     borderRadius: BorderRadius.circular(15),
-    value: _dialogCalendarPickerValue,
+    value: dialogCalendarPickerValue,
     dialogBackgroundColor: Colors.white,
   );
 

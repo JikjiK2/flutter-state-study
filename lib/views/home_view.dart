@@ -8,6 +8,8 @@ import 'profile_view.dart'; // 프로필 화면
 import 'settings_view.dart'; // 설정 화면
 
 class HomeView extends StatefulWidget {
+  const HomeView({super.key});
+
   @override
   _HomeViewState createState() => _HomeViewState();
 }
@@ -44,7 +46,7 @@ Widget indicator(dynamic images, dynamic activeIndex) => Container(
 final List<Widget> imageSliders = imgList
     .map((item) => Container(
           child: Container(
-            margin: EdgeInsets.all(5.0),
+            margin: const EdgeInsets.all(5.0),
             child: ClipRRect(
                 child: Stack(
               children: <Widget>[
@@ -54,7 +56,7 @@ final List<Widget> imageSliders = imgList
                   left: 0.0,
                   right: 0.0,
                   child: Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
                           Color.fromARGB(200, 0, 0, 0),
@@ -65,10 +67,10 @@ final List<Widget> imageSliders = imgList
                       ),
                     ),
                     padding:
-                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                        const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                     child: Text(
                       'No. ${imgList.indexOf(item)} image',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10.0,
                         fontWeight: FontWeight.bold,
@@ -85,12 +87,12 @@ final List<Widget> imageSliders = imgList
 class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
-    int _current = 0;
-    final CarouselSliderController _controller = CarouselSliderController();
+    int current = 0;
+    final CarouselSliderController controller = CarouselSliderController();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('여행 계획'),
+        title: const Text('여행 계획'),
         /*flexibleSpace: Center(
           child: Text(
             '여행 계획',
@@ -101,7 +103,7 @@ class _HomeViewState extends State<HomeView> {
         elevation: 0,*/
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             color: Colors.white,
             onPressed: () {
               // 검색 아이콘 클릭 시 동작
@@ -109,7 +111,7 @@ class _HomeViewState extends State<HomeView> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.person),
+            icon: const Icon(Icons.person),
             color: Colors.white,
             onPressed: () {
               // 프로필 아이콘 클릭 시 동작
@@ -143,15 +145,15 @@ class _HomeViewState extends State<HomeView> {
               ),
               Align(alignment: Alignment.bottomCenter, child: indicator(imageSliders, _current),)
             ]),*/
-            CustomBtn('Login View', context, LoginView()),
+            CustomBtn('Login View', context, const LoginView()),
             const SizedBox(height: 10),
-            CustomBtn('Destination View', context, DestinationListView()),
+            CustomBtn('Destination View', context, const DestinationListView()),
             const SizedBox(height: 10),
-            CustomBtn('Profile View', context, ProfileView()),
+            CustomBtn('Profile View', context, const ProfileView()),
             const SizedBox(height: 10),
-            CustomBtn('Settings View', context, SettingsView()),
+            CustomBtn('Settings View', context, const SettingsView()),
             const SizedBox(height: 10),
-            CustomBtn('CreateTrip View', context, CreateTripView()),
+            CustomBtn('CreateTrip View', context, const CreateTripView()),
             const SizedBox(height: 10),
           ],
         ),

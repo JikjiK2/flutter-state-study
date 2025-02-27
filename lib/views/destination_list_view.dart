@@ -8,6 +8,8 @@ extension StringExtension on String {
 }
 
 class DestinationListView extends StatefulWidget {
+  const DestinationListView({super.key});
+
   @override
   State<DestinationListView> createState() => _DestinationListViewState();
 }
@@ -23,7 +25,7 @@ class _DestinationListViewState extends State<DestinationListView> {
       });
     });
   }*/
-  bool _isLoading = false;
+  final bool _isLoading = false;
   final List<String> tripImages = [
     // SizedBox 대신 사용할 수 있는 더미 데이터
     '여행 사진 1',
@@ -37,19 +39,19 @@ class _DestinationListViewState extends State<DestinationListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           '여행지 목록',
           style: TextStyle(color: Colors.black, fontSize: 20),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
+          icon: const Icon(Icons.arrow_back), // 뒤로가기 아이콘
           onPressed: () {
             Navigator.pop(context); // 이전 화면으로 돌아가기
           },
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search),
             color: Colors.black,
             onPressed: () {
               // 검색 아이콘 클릭 시 동작
@@ -57,7 +59,7 @@ class _DestinationListViewState extends State<DestinationListView> {
             },
           ),
           IconButton(
-            icon: Icon(Icons.person),
+            icon: const Icon(Icons.person),
             color: Colors.black,
             onPressed: () {
               // 프로필 아이콘 클릭 시 동작
@@ -79,9 +81,9 @@ class _DestinationListViewState extends State<DestinationListView> {
                   },
                   child: Padding(
                     padding:
-                        EdgeInsets.symmetric(vertical: 25.0, horizontal: 0.0),
+                        const EdgeInsets.symmetric(vertical: 25.0, horizontal: 0.0),
                     child: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                           border: Border(
                         bottom: BorderSide(
                             width: 10, color: Colors.grey),
@@ -94,7 +96,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                             // 여행 사진들
                             Column(
                               children: [
-                                Container(
+                                SizedBox(
                                   width: double.infinity,
                                   height: 400,
                                   child: ListView.builder(
@@ -112,13 +114,13 @@ class _DestinationListViewState extends State<DestinationListView> {
                                                 //24글자 max 추천
                                                 Padding(
                                                   padding:
-                                                      EdgeInsets.only(left: 4.0),
-                                                  child: Container(
+                                                      const EdgeInsets.only(left: 4.0),
+                                                  child: SizedBox(
                                                     width: 200,
                                                     child: Text(
                                                       '겨울 여행 크리스마스 여행 따뜻한 겨울 최고의 겨울'
                                                           .insertZwj(),
-                                                      style: TextStyle(
+                                                      style: const TextStyle(
                                                         fontSize: 18,
                                                         fontWeight:
                                                             FontWeight.bold,
@@ -136,7 +138,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                                                     color: Colors.grey,
                                                     height: 300,
                                                     width: 300,
-                                                    child: Text('image'),
+                                                    child: const Text('image'),
                                                   ),
                                                   /*Image.network(
                                                                         tripImages[index],
@@ -164,7 +166,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                     print('카드 클릭됨');
                   },
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0.0),
+                    padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 0.0),
                     child: Container(
                       decoration: BoxDecoration(
                           border: Border(
@@ -175,7 +177,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            const Row(
                               children: [
                                 CircleAvatar(
                                   radius: 20,
@@ -203,9 +205,9 @@ class _DestinationListViewState extends State<DestinationListView> {
                                 ),
                               ],
                             ),
-                            SizedBox(height: 10),
+                            const SizedBox(height: 10),
                             // 여행 사진들
-                            Container(
+                            SizedBox(
                               height: 100,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
@@ -219,7 +221,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                                         color: Colors.grey,
                                         height: 100,
                                         width: 100,
-                                        child: Text('image'),
+                                        child: const Text('image'),
                                       ),
                                       /*Image.network(
                                 tripImages[index],
@@ -231,8 +233,8 @@ class _DestinationListViewState extends State<DestinationListView> {
                                 },
                               ),
                             ),
-                            SizedBox(height: 10),
-                            Text(
+                            const SizedBox(height: 10),
+                            const Text(
                               'description',
                               style: TextStyle(
                                 fontSize: 14,
@@ -252,7 +254,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                   },
                   child: Padding(
                     padding:
-                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+                        const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
                     child: Card(
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -263,7 +265,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            const Row(
                               children: [
                                 CircleAvatar(
                                   radius: 20,
@@ -291,9 +293,9 @@ class _DestinationListViewState extends State<DestinationListView> {
                                 ),
                               ],
                             ),
-                            SizedBox(height: 10),
+                            const SizedBox(height: 10),
                             // 여행 사진들
-                            Container(
+                            SizedBox(
                               height: 100,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
@@ -307,7 +309,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                                         color: Colors.grey,
                                         height: 100,
                                         width: 100,
-                                        child: Text('image'),
+                                        child: const Text('image'),
                                       ),
                                       /*Image.network(
                                 tripImages[index],
@@ -319,8 +321,8 @@ class _DestinationListViewState extends State<DestinationListView> {
                                 },
                               ),
                             ),
-                            SizedBox(height: 10),
-                            Text(
+                            const SizedBox(height: 10),
+                            const Text(
                               'description',
                               style: TextStyle(
                                 fontSize: 14,
@@ -347,7 +349,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                 },
                 child: Padding(
                   padding:
-                  EdgeInsets.symmetric(vertical: 25.0, horizontal: 0.0),
+                  const EdgeInsets.symmetric(vertical: 25.0, horizontal: 0.0),
                   child: Container(
                     decoration: BoxDecoration(
                         border: Border(
@@ -362,7 +364,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                           // 여행 사진들
                           Column(
                             children: [
-                              Container(
+                              SizedBox(
                                 width: double.infinity,
                                 height: 400,
                                 child: ListView.builder(
@@ -380,13 +382,13 @@ class _DestinationListViewState extends State<DestinationListView> {
                                               //24글자 max 추천
                                               Padding(
                                                 padding:
-                                                EdgeInsets.only(left: 4.0),
-                                                child: Container(
+                                                const EdgeInsets.only(left: 4.0),
+                                                child: SizedBox(
                                                   width: 200,
                                                   child: Text(
                                                     '겨울 여행 크리스마스 여행 따뜻한 겨울 최고의 겨울'
                                                         .insertZwj(),
-                                                    style: TextStyle(
+                                                    style: const TextStyle(
                                                       fontSize: 18,
                                                       fontWeight:
                                                       FontWeight.bold,
@@ -404,7 +406,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                                                   color: Colors.grey,
                                                   height: 300,
                                                   width: 300,
-                                                  child: Text('image'),
+                                                  child: const Text('image'),
                                                 ),
                                                 /*Image.network(
                                                                       tripImages[index],
@@ -432,7 +434,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                   print('카드 클릭됨');
                 },
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0.0),
+                  padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 0.0),
                   child: Container(
                     decoration: BoxDecoration(
                         border: Border(
@@ -443,7 +445,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          const Row(
                             children: [
                               CircleAvatar(
                                 radius: 20,
@@ -471,9 +473,9 @@ class _DestinationListViewState extends State<DestinationListView> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           // 여행 사진들
-                          Container(
+                          SizedBox(
                             height: 100,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
@@ -487,7 +489,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                                       color: Colors.grey,
                                       height: 100,
                                       width: 100,
-                                      child: Text('image'),
+                                      child: const Text('image'),
                                     ),
                                     /*Image.network(
                               tripImages[index],
@@ -499,8 +501,8 @@ class _DestinationListViewState extends State<DestinationListView> {
                               },
                             ),
                           ),
-                          SizedBox(height: 10),
-                          Text(
+                          const SizedBox(height: 10),
+                          const Text(
                             'description',
                             style: TextStyle(
                               fontSize: 14,
@@ -520,7 +522,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                 },
                 child: Padding(
                   padding:
-                  EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
+                  const EdgeInsets.symmetric(vertical: 10.0, horizontal: 15.0),
                   child: Card(
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -531,7 +533,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          const Row(
                             children: [
                               CircleAvatar(
                                 radius: 20,
@@ -559,9 +561,9 @@ class _DestinationListViewState extends State<DestinationListView> {
                               ),
                             ],
                           ),
-                          SizedBox(height: 10),
+                          const SizedBox(height: 10),
                           // 여행 사진들
-                          Container(
+                          SizedBox(
                             height: 100,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
@@ -575,7 +577,7 @@ class _DestinationListViewState extends State<DestinationListView> {
                                       color: Colors.grey,
                                       height: 100,
                                       width: 100,
-                                      child: Text('image'),
+                                      child: const Text('image'),
                                     ),
                                     /*Image.network(
                               tripImages[index],
@@ -587,8 +589,8 @@ class _DestinationListViewState extends State<DestinationListView> {
                               },
                             ),
                           ),
-                          SizedBox(height: 10),
-                          Text(
+                          const SizedBox(height: 10),
+                          const Text(
                             'description',
                             style: TextStyle(
                               fontSize: 14,

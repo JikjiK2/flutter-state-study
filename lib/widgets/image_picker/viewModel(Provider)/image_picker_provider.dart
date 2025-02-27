@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_state_mvvm/widgets/image_picker/model/image_picker_model.dart';
 import 'package:photo_manager/photo_manager.dart';
 
@@ -12,6 +14,11 @@ class ImagePickerState {
   final int initialIndex;
   final bool isLoading;
   final String? errorMessage;
+  final List<AssetEntity> selectedImages;
+  final Color selectedColor;
+  final int pickerGridCount;
+  RequestType requestType = RequestType.common;
+  File? selectedFile;
 
   ImagePickerState({
     this.albumList = const [],
@@ -21,6 +28,11 @@ class ImagePickerState {
     this.initialIndex = 0,
     this.isLoading = false,
     this.errorMessage,
+    this.selectedFile,
+    required this.requestType,
+    required this.selectedImages,
+    required this.selectedColor,
+    required this.pickerGridCount,
   });
 
   ImagePickerState copyWith({
@@ -32,6 +44,10 @@ class ImagePickerState {
     int? initialIndex,
     bool? isLoading,
     String? errorMessage,
+    int? pickerGridCount,
+    Color? selectedColor,
+    RequestType? requestType,
+    File? selectedFile,
   }) {
     return ImagePickerState(
       albumList: albumList ?? this.albumList,
@@ -41,6 +57,11 @@ class ImagePickerState {
       initialIndex: initialIndex ?? this.initialIndex,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
+      selectedImages: selectedImages ?? this.selectedImages,
+      selectedColor: selectedColor ?? this.selectedColor,
+      pickerGridCount: pickerGridCount ?? this.pickerGridCount,
+      requestType: requestType ?? this.requestType,
+      selectedFile: selectedFile ?? this.selectedFile,
     );
   }
 }
@@ -50,25 +71,49 @@ class ImagePickerViewModel extends ChangeNotifier {
   ImagePickerState _state; //state 인스턴스, View 상태 관리
   late PageController _pageController;
 
+  static const platform = MethodChannel('com.example.camera/intent');
+
+  ImagePickerState get state => _state; //외부에서 읽을 수 있도록 Getter 제공
+  PageController get pageController => _pageController;
+
+
   ImagePickerViewModel(this._model)
       : _state = ImagePickerState(
           albumList: [],
           selectedAlbum: null,
           maxSelectableCount: 10,
           initialIndex: 0,
+          pickerGridCount: 3,
+          selectedImages: [],
+          selectedColor: Colors.blue,
+          requestType: RequestType.common,
         ) {
     init();
     _pageController = PageController(initialPage: _state.initialIndex);
+    platform.setMethodCallHandler(_handleMethodCall);
   }
 
-  ImagePickerState get state => _state; //외부에서 읽을 수 있도록 Getter 제공
-  PageController get pageController => _pageController;
-  List<AssetEntity> get selectedImages => _model.selectedImages;
+  Future<void> openCamera() async {
+    await _model.openCamera();
+    _updateState(_state.copyWith(selectedFile: _model.selectedFile));
+  }
+
+  Future<void> _handleMethodCall(MethodCall call) async {
+    switch (call.method) {
+      case 'imageCaptured':
+        final path = call.arguments as String?;
+        if (path != null) {
+          _model.setSelectedFile(File(path));
+          _updateState(_state.copyWith(selectedFile: _model.selectedFile));
+        }
+        break;
+    }
+  }
 
   Future<void> init() async {
-    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
+    print("가나다라마바사아자차카타ㅏ하");
+    _updateState(_state.copyWith(isLoading: true, errorMessage: null, requestType: _model.requestType));
     try {
-      await _model.init();
       _updateState(_state.copyWith(
           albumList: _model.albumList,
           selectedAlbum: _model.selectedAlbum,
@@ -77,6 +122,17 @@ class ImagePickerViewModel extends ChangeNotifier {
       _updateState(_state.copyWith(errorMessage: e.toString()));
     } finally {
       _updateState(_state.copyWith(isLoading: false));
+    }
+  }
+
+  Future<void> loadAlbumList(RequestType requestType) async {
+    _model.setRequestType(requestType);
+    _updateState(_state.copyWith(requestType: _model.requestType));
+    try {
+      await _model.loadAlbumList();
+      _updateState(_state.copyWith(albumList: _model.albumList, selectedAlbum: _model.selectedAlbum, assetList: _model.assetList));
+    } catch (e) {
+      _updateState(_state.copyWith(errorMessage: e.toString()));
     }
   }
 
@@ -121,7 +177,6 @@ class ImagePickerViewModel extends ChangeNotifier {
         _pageController.jumpToPage(_state.initialIndex);
       }
     });
-
   }
 
   // 8. 사진 선택 완료 (선택된 사진 목록 반환)
@@ -129,10 +184,31 @@ class ImagePickerViewModel extends ChangeNotifier {
     return _model.getSelectedPhotos();
   }
 
-  // 9. 상태 초기화
-  void initPickerState(int maxCount) {
+  void setGridCount(int count) {
+    _model.setPickerGridCount(count);
+    _updateState(_state.copyWith(pickerGridCount: count));
+  }
+
+  // 선택 색상 설정
+  void setSelectedColor(Color color) {
+    _model.setSelectedColor(color);
+    _updateState(_state.copyWith(selectedColor: color));
+  }
+
+  void removeImage(AssetEntity assetImage) {
+    _model.removeSelectedImage(assetImage);
+    _updateState(_state.copyWith(selectedImages: _model.selectedImages));
+  }
+
+  // 선택된 이미지 초기화
+  void clearSelectedImages() {
     _model.clearSelectedImages();
-    setMaxSelectableCount(maxCount);
+    _updateState(_state.copyWith(selectedImages: _model.selectedImages));
+  }
+
+  void setRequestType(RequestType requestType) { // 추가된 부분
+    _model.setRequestType(requestType);
+    _updateState(_state.copyWith(requestType: _model.requestType));
   }
 
   void _updateState(ImagePickerState newState) {

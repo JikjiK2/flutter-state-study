@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class PrivacyPolicy extends StatefulWidget {
+  const PrivacyPolicy({super.key});
+
   @override
   _PrivacyPolicyState createState() => _PrivacyPolicyState();
 }
@@ -33,12 +35,12 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
       // 동의한 경우 다음 페이지로 이동
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => NextPage()),
+        MaterialPageRoute(builder: (context) => const NextPage()),
       );
     } else {
       // 필수 약관에 동의하지 않은 경우 경고 메시지 표시
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('필수 약관에 동의해야 합니다.')),
+        const SnackBar(content: Text('필수 약관에 동의해야 합니다.')),
       );
     }
   }
@@ -46,7 +48,7 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
   void _showPrivacyPolicy() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => PrivacyPolicyPage()),
+      MaterialPageRoute(builder: (context) => const PrivacyPolicyPage()),
     );
   }
 
@@ -54,9 +56,9 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('회원가입 약관 동의'),
+        title: const Text('회원가입 약관 동의'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
+          icon: const Icon(Icons.arrow_back), // 뒤로가기 아이콘
           onPressed: () {
             Navigator.pop(context); // 이전 화면으로 돌아가기
           },
@@ -67,14 +69,14 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               '회원가입 약관',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextButton(
               onPressed: _showPrivacyPolicy,
-              child: Text('개인정보 처리방침 보기',
+              child: const Text('개인정보 처리방침 보기',
                   style: TextStyle(fontSize: 17, color: Colors.blue)),
             ),
             Expanded(
@@ -83,7 +85,7 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CheckboxListTile(
-                      title: Text('1. 개인정보 보호 (필수)'),
+                      title: const Text('1. 개인정보 보호 (필수)'),
                       value: _isAgreed1,
                       onChanged: (value) {
                         setState(() {
@@ -96,7 +98,7 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
                       },
                     ),
                     CheckboxListTile(
-                      title: Text('2. 서비스 이용 (필수)'),
+                      title: const Text('2. 서비스 이용 (필수)'),
                       value: _isAgreed2,
                       onChanged: (value) {
                         setState(() {
@@ -109,7 +111,7 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
                       },
                     ),
                     CheckboxListTile(
-                      title: Text('3. 약관의 변경 (필수)'),
+                      title: const Text('3. 약관의 변경 (필수)'),
                       value: _isAgreed3,
                       onChanged: (value) {
                         setState(() {
@@ -122,7 +124,7 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
                       },
                     ),
                     CheckboxListTile(
-                      title: Text('4. 기타 사항 (선택)'),
+                      title: const Text('4. 기타 사항 (선택)'),
                       value: _isAgreed4,
                       onChanged: (value) {
                         setState(() {
@@ -134,11 +136,11 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
                         });
                       },
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
+                        const Text(
                           '모두 동의',
                           style: TextStyle(fontSize: 16),
                         ),
@@ -167,7 +169,7 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
             ),
             ElevatedButton(
               onPressed: _isNextEnabled ? _onNextPressed : null, // 버튼 활성화 여부 설정
-              child: Text('다음'),
+              child: const Text('다음'),
             ),
           ],
         ),
@@ -177,13 +179,15 @@ class _PrivacyPolicyState extends State<PrivacyPolicy> {
 }
 
 class NextPage extends StatelessWidget {
+  const NextPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('다음 페이지'),
+        title: const Text('다음 페이지'),
       ),
-      body: Center(
+      body: const Center(
         child: Text(
           '회원가입 완료!',
           style: TextStyle(fontSize: 24),
@@ -194,18 +198,20 @@ class NextPage extends StatelessWidget {
 }
 
 class PrivacyPolicyPage extends StatelessWidget {
+  const PrivacyPolicyPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           '개인정보 처리방침',
           style: TextStyle(color: Colors.black, fontSize: 20.0),
         ),
         backgroundColor: Colors.white,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: const Padding(
+        padding: EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

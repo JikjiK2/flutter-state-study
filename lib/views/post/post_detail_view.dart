@@ -15,7 +15,7 @@ class _PostDetailViewState extends State<PostDetailView> {
       appBar: AppBar(
         scrolledUnderElevation: 0.0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
+          icon: const Icon(Icons.arrow_back), // 뒤로가기 아이콘
           onPressed: () {
             Navigator.pop(context); // 이전 화면으로 돌아가기
           },
@@ -49,7 +49,7 @@ class _PostDetailViewState extends State<PostDetailView> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: EdgeInsets.only(bottom: 100.0),
+          padding: const EdgeInsets.only(bottom: 100.0),
           child: Center(
             child: Column(
               children: [
@@ -58,19 +58,19 @@ class _PostDetailViewState extends State<PostDetailView> {
                 ),
                 Padding(
                   padding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                      const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                   child: Row(
                     children: [
-                      CircleAvatar(
+                      const CircleAvatar(
                         minRadius: 20.0,
                       ),
-                      SizedBox(
+                      const SizedBox(
                         width: 10.0,
                       ),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          const Row(
                             children: [
                               Text(
                                 '작성자',
@@ -78,7 +78,7 @@ class _PostDetailViewState extends State<PostDetailView> {
                                     fontSize: 18.0,
                                     fontWeight: FontWeight.bold),
                               ),
-                              const SizedBox(
+                              SizedBox(
                                 width: 3.0,
                               ),
                             ],
@@ -99,8 +99,8 @@ class _PostDetailViewState extends State<PostDetailView> {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 20.0),
-                  child: Column(
+                  padding: const EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 20.0),
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -108,7 +108,7 @@ class _PostDetailViewState extends State<PostDetailView> {
                         style: TextStyle(
                             fontSize: 22.0, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(
+                      SizedBox(
                         height: 5.0,
                       ),
                       Text(
@@ -117,18 +117,18 @@ class _PostDetailViewState extends State<PostDetailView> {
                   ),
                 ),
                 AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  decoration: BoxDecoration(color: Colors.grey),
+                  duration: const Duration(milliseconds: 200),
+                  decoration: const BoxDecoration(color: Colors.grey),
                   width: double.infinity,
                   height: 400,
                   alignment: Alignment.center,
-                  child: Text('사진'),
+                  child: const Text('사진'),
                 ),
                 const SizedBox(
                   height: 20.0,
                 ),
                 Container(
-                  padding: EdgeInsets.all(10.0),
+                  padding: const EdgeInsets.all(10.0),
                   width: double.infinity,
                   color: Colors.amberAccent,
                   child: Column(
@@ -139,7 +139,7 @@ class _PostDetailViewState extends State<PostDetailView> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   SizedBox(
@@ -163,7 +163,7 @@ class _PostDetailViewState extends State<PostDetailView> {
 
                                 ],
                               ),
-                              Text('안녕하세요. 댓글1', style: TextStyle(fontSize: 12.0),),
+                              const Text('안녕하세요. 댓글1', style: TextStyle(fontSize: 12.0),),
                               Row(
                                 children: [
                                   Text(
@@ -185,7 +185,7 @@ class _PostDetailViewState extends State<PostDetailView> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   SizedBox(
@@ -209,7 +209,7 @@ class _PostDetailViewState extends State<PostDetailView> {
 
                                 ],
                               ),
-                              Text('안녕하세요. 대댓글1', style: TextStyle(fontSize: 12.0),),
+                              const Text('안녕하세요. 대댓글1', style: TextStyle(fontSize: 12.0),),
                               Row(
                                 children: [
                                   Text(
@@ -230,7 +230,7 @@ class _PostDetailViewState extends State<PostDetailView> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   SizedBox(
@@ -254,7 +254,7 @@ class _PostDetailViewState extends State<PostDetailView> {
 
                                 ],
                               ),
-                              Text('안녕하세요. 댓글2', style: TextStyle(fontSize: 12.0),),
+                              const Text('안녕하세요. 댓글2', style: TextStyle(fontSize: 12.0),),
                               Row(
                                 children: [
                                   Text(
@@ -276,7 +276,7 @@ class _PostDetailViewState extends State<PostDetailView> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
+                              const Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   SizedBox(
@@ -300,7 +300,7 @@ class _PostDetailViewState extends State<PostDetailView> {
 
                                 ],
                               ),
-                              Text('안녕하세요. 대댓글2', style: TextStyle(fontSize: 12.0),),
+                              const Text('안녕하세요. 대댓글2', style: TextStyle(fontSize: 12.0),),
                               Row(
                                 children: [
                                   Text(

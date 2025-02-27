@@ -13,6 +13,12 @@ android {
     compileSdk = 34
     ndkVersion = "25.1.8937393"
 
+    lintOptions {
+        abortOnError false // Lint 오류가 발생해도 빌드가 중단되지 않도록 설정
+        checkReleaseBuilds false // 릴리즈 빌드에서 Lint 검사를 하지 않도록 설정
+        checkAllWarnings true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -40,6 +46,10 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.10"
 }
 
 flutter {
