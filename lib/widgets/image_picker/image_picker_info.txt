@@ -1,7 +1,9 @@
-상태 관리 라이브러리     Provider
-아키텍처 패턴           MVVM
+상태 관리 - Provider
+
+아키텍처 패턴 - MVVM
 
 주요 패키지
+
     photo_manager: ^3.6.4
     https://pub.dev/packages/photo_manager
 
@@ -105,18 +107,12 @@
             선택한 이미지 개수 표시가 있습니다.
             선택한 이미지 전송 버튼이 있습니다.
 
-오류 수정 중
+개선 사항
+
     Kotlin 코드 작성후 통신을 통해 네이티브 카메라로 촬영 및 저장 기능 -> image_picker 통합하는 과정에서
-    네이티브 카메라가 열리면서 Flutter 앱이 백그라운드로 전환되었다가 포그라운드로 돌아올 때 일부 UI 요소가 보이지 않는 문제 발생 (앱 상태 주기와 상태 관리 학습 부족)
+    네이티브 카메라가 열리면서 Flutter 앱이 백그라운드로 전환되었다가 포그라운드로 돌아올 때 일부 UI 요소가 보이지 않는 문제 발생 (앱 생명 주기와 상태 관리 학습 필요)
 
 추가 예정 기능
+
     전체 화면에서 이미지 수정 기능
     카메라로 직접 찍은 사진 수정 및 선택 가능한 기능
-
-
-
-
-
-
-photo_manager를 활용한 image_picker
-https://www.youtube.com/watch?v=y-cibNxCPk4

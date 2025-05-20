@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_state_mvvm/views/image_picker_example.dart';
+import 'package:flutter_state_mvvm/views/profile_view.dart';
 import 'package:flutter_state_mvvm/widgets/image_picker/model/image_picker_model.dart';
+import 'package:flutter_state_mvvm/widgets/image_picker/view/captured_full_image_view.dart';
+import 'package:flutter_state_mvvm/widgets/image_picker/view/full_image_view.dart';
+import 'package:flutter_state_mvvm/widgets/image_picker/view/image_picker.dart';
 import 'package:flutter_state_mvvm/widgets/image_picker/view/image_picker_view.dart';
 import 'package:flutter_state_mvvm/widgets/image_picker/viewModel(Provider)/image_picker_provider.dart';
 import 'package:flutter_state_mvvm/widgets/test.dart';
@@ -37,6 +42,27 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'flutter_test',
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const ImagePickerExample(),
+        '/imagePickerView': (context) => const ImagePicker(
+              isClear: true,
+              viewGridCount: 4,
+              isGrid: false,
+              selectedColor: Colors.orangeAccent,
+              maxSelectableCount: 10,
+              showCameraIcon: true,
+              removeButtonSize: 20,
+              pickerGridCount: 3,
+              requestType: "common",
+              imageSize: 150,
+              imageSpacing: 5.0,
+              padding: EdgeInsets.all(2.0),
+            ),
+        '/imagePicker': (context) => const CustomImagePicker(),
+        '/fullImage': (context) => const FullScreenImage(),
+        '/cameraImage': (context) => const CameraImageView(),
+      },
       debugShowCheckedModeBanner: false,
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       supportedLocales: const [
@@ -67,18 +93,6 @@ class MyApp extends StatelessWidget {
             selectedItemColor: Colors.black,
             unselectedItemColor: Colors.grey,
             unselectedLabelStyle: TextStyle(color: Colors.grey)),
-      ),
-      home:
-      const ImagePicker(
-        requestType: RequestType.common,
-        isClear: false,
-        isGrid: false,
-        pickerGridCount: 3,
-        selectedColor: Colors.red,
-        viewGridCount: 2,
-        maxSelectableCount: 5,
-        removeButtonSize: 30.0,
-        padding: EdgeInsets.all(10.0),
       ),
     );
   }

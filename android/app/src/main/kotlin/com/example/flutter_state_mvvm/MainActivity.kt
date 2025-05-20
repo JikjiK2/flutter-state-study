@@ -10,12 +10,15 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        cameraManager = CameraManager(this)
+        // Activity context 대신 applicationContext 사용
+        cameraManager = CameraManager(applicationContext)
         cameraManager.setFlutterEngine(flutterEngine)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.camera/intent").setMethodCallHandler { call, result ->
             if (call.method == "openCamera") {
+                // openCamera 메서드는 Activity를 필요로 하므로 여기서는 this(Activity context)를 전달해야 합니다.
                 cameraManager.openCamera(this)
+                result.success(null) // Flutter에 성공 응답 (필요에 따라)
             } else {
                 result.notImplemented()
             }

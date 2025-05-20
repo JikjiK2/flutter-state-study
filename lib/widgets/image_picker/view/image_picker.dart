@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_state_mvvm/widgets/image_picker/viewModel(Provider)/image_picker_provider.dart';
-import 'package:flutter_state_mvvm/widgets/image_picker/view/full_image_view.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:provider/provider.dart';
@@ -14,22 +13,84 @@ class CustomImagePicker extends StatefulWidget {
   State<CustomImagePicker> createState() => _CustomImagePickerState();
 }
 
-class _CustomImagePickerState extends State<CustomImagePicker> {
+class _CustomImagePickerState extends State<CustomImagePicker>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this); // 옵저버 해제
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      context.read<ImagePickerViewModel>().handleAppResumed();
+    }
+    if (state == AppLifecycleState.paused) {
+      context.read<ImagePickerViewModel>().handleAppPaused();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Selector<ImagePickerViewModel, String?>(
-        selector: (context, viewModel) => viewModel.state.errorMessage,
-        builder: (context, errorMessage, child) {
-          if (errorMessage != null) {
-            return Center(
-              child: Text('Error: $errorMessage'),
-            );
+    return PopScope<dynamic>(
+      onPopInvokedWithResult: (bool? didPop, dynamic result) {
+        final viewModel = context.read<ImagePickerViewModel>();
+        if (viewModel.state.isPoppedByCode) {
+          viewModel.setPoppedByCode(false);
+        } else {
+          if (didPop!) {
+            viewModel.clearSelectedImages();
           }
-          return Scaffold(
-            appBar: _buildAppBar(context),
-            body: _buildBody(context),
-          );
-        });
+        }
+      },
+      child: Selector<ImagePickerViewModel,
+          ({bool cameraLoading, AssetEntity? capturedAsset})>(
+        selector: (context, viewModel) => (
+          cameraLoading: viewModel.state.cameraLoading,
+          capturedAsset: viewModel.state.capturedAsset,
+        ),
+        builder: (context, state, child) {
+          if (state.cameraLoading) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                Navigator.pushNamed(context, '/cameraImage').then((_) {
+                  context.read<ImagePickerViewModel>().onCameraNavigationDone();
+                });
+              }
+            });
+          }
+          return Selector<ImagePickerViewModel,
+                  ({String? errorMessage, bool appLifeResumed})>(
+              selector: (context, viewModel) => (
+                    errorMessage: viewModel.state.errorMessage,
+                    appLifeResumed: viewModel.state.appLifeResumed
+                  ),
+              builder: (context, state, child) {
+                if (state.errorMessage != null) {
+                  return Center(
+                    child: Text('오류: $state.errorMessage'),
+                  );
+                }
+                if (state.appLifeResumed) {
+                  return const Scaffold();
+                } else {
+                  return Scaffold(
+                    appBar: _buildAppBar(context),
+                    body: _buildBody(context),
+                  );
+                }
+              });
+        },
+      ),
+    );
   }
 
   // AppBar 위젯
@@ -57,15 +118,20 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
               onChanged: (AssetPathEntity? value) {
                 context.read<ImagePickerViewModel>().selectAlbum(value!);
               },
-              items: albumList.map<DropdownMenuItem<AssetPathEntity>>(
-                  (AssetPathEntity album) {
+              items: albumList.asMap().entries.map((entry) {
+                int index = entry.key;
+                AssetPathEntity album = entry.value;
+                bool isFirstItem = (index == 0);
+                String albumDisplayName = isFirstItem ? "전체보기" : album.name;
+
                 return DropdownMenuItem<AssetPathEntity>(
                   value: album,
                   child: FutureBuilder<int>(
                     future: album.assetCountAsync,
                     builder: (context, snapshot) {
-                      String subtitle = "${snapshot.data}";
-                      return Text("${album.name} ($subtitle)");
+                      String subtitle =
+                          snapshot.data != null ? "${snapshot.data}" : "";
+                      return Text("$albumDisplayName $subtitle");
                     },
                   ),
                 );
@@ -79,27 +145,42 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
 
   // 이미지 선택 완료 버튼 위젯
   Widget _buildCompleteButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        context.read<ImagePickerViewModel>().init();
-        Navigator.pop(
-            context, context.read<ImagePickerViewModel>().getSelectedPhotos());
-      },
-      child: const Center(
-        child: Padding(
-          padding: EdgeInsets.only(right: 15.0),
-          child: Icon(Icons.check),
-        ),
-      ),
-    );
+    return Selector<ImagePickerViewModel, List<AssetEntity>>(
+        selector: (context, viewModel) => (viewModel.state.selectedImages),
+        builder: (context, selectedImages, child) {
+          return GestureDetector(
+            onTap: () {
+              if(selectedImages.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('이미지를 선택해주세요.'),
+                  ),
+                );
+              }
+              else{
+                context.read<ImagePickerViewModel>().init();
+                context.read<ImagePickerViewModel>().setPoppedByCode(true);
+                Navigator.pop(context,
+                    context.read<ImagePickerViewModel>().getSelectedPhotos());
+              }
+            },
+            child: const Center(
+              child: Padding(
+                padding: EdgeInsets.only(right: 15.0),
+                child: Icon(Icons.check),
+              ),
+            ),
+          );
+        });
   }
 
   // Body 위젯
   Widget _buildBody(BuildContext context) {
-    return Selector<ImagePickerViewModel, ({bool isLoading, List<AssetEntity> assetList})>(
+    return Selector<ImagePickerViewModel,
+        ({bool isLoading, List<AssetEntity> assetList})>(
       selector: (context, viewModel) => (
-      isLoading: viewModel.state.isLoading,
-      assetList: viewModel.state.assetList
+        isLoading: viewModel.state.isLoading,
+        assetList: viewModel.state.assetList
       ),
       builder: (context, state, child) {
         if (state.isLoading) {
@@ -109,14 +190,20 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
         }
         return GridView.builder(
           physics: const BouncingScrollPhysics(),
-          itemCount: state.assetList.length,
+          itemCount: state.assetList.length + 1,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            mainAxisSpacing: 3.0,
+            crossAxisSpacing: 3.0,
             crossAxisCount:
-            context.read<ImagePickerViewModel>().state.pickerGridCount,
+                context.read<ImagePickerViewModel>().state.pickerGridCount,
           ),
           itemBuilder: (context, index) {
-            AssetEntity assetEntity = state.assetList[index];
-            return assetWidget(assetEntity, index);
+            if (index == 0) {
+              return cameraWidget(context);
+            } else {
+              AssetEntity assetEntity = state.assetList[index - 1];
+              return assetWidget(assetEntity, index - 1);
+            }
           },
         );
       },
@@ -124,47 +211,72 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
   }
 
   // GirdView 첫번째 카메라 위젯
-  Widget cameraWidget() {
-    return GestureDetector(
-      onTap: () {
-        context.read<ImagePickerViewModel>().openCamera();
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(3.0),
-        child: Selector<ImagePickerViewModel, ({bool isLoading, String? errorMessage})>(
-          selector: (context, viewModel) => (
-          isLoading: viewModel.state.isLoading,
-          errorMessage: viewModel.state.errorMessage
-          ),
-          builder: (context, state, child) {
-            if (state.isLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-            if (state.errorMessage != null) {
-              return Center(
-                child: Text('Error: ${state.errorMessage}'),
-              );
-            }
-            return Container(
-                color: Colors.black87,
-                child: const Icon(
-                  Icons.camera_alt,
-                  color: Colors.white,
-                ));
-          },
-        ),
+  Widget cameraWidget(BuildContext context) {
+    final viewModel = context.read<ImagePickerViewModel>();
+    return Selector<ImagePickerViewModel,
+        ({int maxSelectableCount, int selectedImagesLength})>(
+      selector: (context, viewModel) => (
+        maxSelectableCount: viewModel.state.maxSelectableCount,
+        selectedImagesLength: viewModel.state.selectedImages.length
       ),
+      builder: (context, state, child) {
+        return GestureDetector(
+          onTap: () {
+            if (state.selectedImagesLength < state.maxSelectableCount) {
+              viewModel.openCamera();
+            }
+            if (state.selectedImagesLength == state.maxSelectableCount) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('최대 ${state.maxSelectableCount}개까지 선택 가능합니다.'),
+                ),
+              );
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(0.0),
+            child: Selector<ImagePickerViewModel,
+                ({bool isLoading, String? errorMessage, bool appLifeResumed})>(
+              selector: (context, viewModel) => (
+                isLoading: viewModel.state.isLoading,
+                errorMessage: viewModel.state.errorMessage,
+                appLifeResumed: viewModel.state.appLifeResumed
+              ),
+              builder: (context, state, child) {
+                if (state.isLoading) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                if (state.errorMessage != null) {
+                  return Center(
+                    child: Text('Error: ${state.errorMessage}'),
+                  );
+                }
+                return Container(
+                  color: Colors.black87,
+                  child: state.appLifeResumed
+                      ? const SizedBox()
+                      : const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                        ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
   // GridView 표시될 각각의 요소 (이미지 1개)
   Widget assetWidget(AssetEntity assetEntity, int index) {
-    return Selector<ImagePickerViewModel, ({bool isLoading, String? errorMessage})>(
+    return Selector<ImagePickerViewModel,
+        ({bool isLoading, String? errorMessage})>(
       selector: (context, viewModel) => (
-      isLoading: viewModel.state.isLoading,
-      errorMessage: viewModel.state.errorMessage
+        isLoading: viewModel.state.isLoading,
+        errorMessage: viewModel.state.errorMessage
       ),
       builder: (context, state, child) {
         if (state.isLoading) {
@@ -204,22 +316,114 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
   // 이미지 표시 위젯
   Widget _buildImageDisplay(
       AssetEntity assetEntity, ImagePickerViewModel viewModel) {
-    return Positioned.fill(
-      child: GestureDetector(
-        onTap: () {
-          viewModel.selectedImage(assetEntity);
-        },
-        child: Selector<ImagePickerViewModel, ({bool isSelected, Color selectedColor})>(
-          selector: (context, viewModel) => (
-          isSelected: viewModel.state.selectedImages.contains(assetEntity),
-          selectedColor: viewModel.state.selectedColor
+    return Selector<
+        ImagePickerViewModel,
+        ({
+          bool isSelected,
+          Color selectedColor,
+          int maxSelectableCount,
+          int selectedImagesLength
+        })>(
+      selector: (context, viewModel) => (
+        isSelected: viewModel.state.selectedImages.contains(assetEntity),
+        selectedColor: viewModel.state.selectedColor,
+        maxSelectableCount: viewModel.state.maxSelectableCount,
+        selectedImagesLength: viewModel.state.selectedImages.length
+      ),
+      builder: (context, state, child) {
+        return Positioned.fill(
+          child: GestureDetector(
+            onTap: () {
+              viewModel.selectedImage(assetEntity);
+              if (state.selectedImagesLength >= state.maxSelectableCount) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content:
+                        Text('최대 ${state.maxSelectableCount}개까지 선택 가능합니다.'),
+                  ),
+                );
+              }
+            },
+            child:
+                //이미지 위에 border를 씌우는 느낌
+                Stack(
+              fit: StackFit.expand,
+              children: [
+                Positioned.fill(
+                  child: AssetEntityImage(
+                    assetEntity,
+                    isOriginal: false,
+                    thumbnailSize: const ThumbnailSize.square(250),
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Icon(
+                          Icons.error,
+                          color: Colors.red,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (state.isSelected)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: state.selectedColor,
+                          width: 3.0,
+                        ),
+                      ),
+                    ),
+                  )
+              ],
+            ),
           ),
-          builder: (context, state, child) {
-            return Container(
+        );
+      },
+    );
+  }
+
+  //이미지 자체의 border 수정, 선택 시 이미지 확대 및 축소
+  Widget _buildImageDisplay2(
+      AssetEntity assetEntity, ImagePickerViewModel viewModel) {
+    return Selector<
+        ImagePickerViewModel,
+        ({
+          bool isSelected,
+          Color selectedColor,
+          int maxSelectableCount,
+          int selectedImagesLength
+        })>(
+      selector: (context, viewModel) => (
+        isSelected: viewModel.state.selectedImages.contains(assetEntity),
+        selectedColor: viewModel.state.selectedColor,
+        maxSelectableCount: viewModel.state.maxSelectableCount,
+        selectedImagesLength: viewModel.state.selectedImages.length
+      ),
+      builder: (context, state, child) {
+        return Positioned.fill(
+          child: GestureDetector(
+            onTap: () {
+              viewModel.selectedImage(assetEntity);
+              if (state.selectedImagesLength >= state.maxSelectableCount) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content:
+                        Text('최대 ${state.maxSelectableCount}개까지 선택 가능합니다.'),
+                  ),
+                );
+              }
+            },
+            child:
+                //이미지 위에 border를 씌우는 느낌
+                Container(
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: state.isSelected ? state.selectedColor : Colors.transparent,
-                  width: state.isSelected ? 3.0 : 3.0,
+                  color: state.isSelected
+                      ? state.selectedColor
+                      : Colors.transparent,
+                  width: state.isSelected ? 3.0 : 0.0,
                 ),
               ),
               child: AssetEntityImage(
@@ -236,10 +440,10 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
                   );
                 },
               ),
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -306,21 +510,25 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
           },
           child: Padding(
             padding: const EdgeInsets.all(7.0),
-            child: Selector<ImagePickerViewModel, ({bool isSelected, Color selectedColor})>(
+            child: Selector<ImagePickerViewModel,
+                ({bool isSelected, Color selectedColor})>(
               selector: (context, viewModel) => (
-              isSelected: viewModel.state.selectedImages.contains(assetEntity),
-              selectedColor: viewModel.state.selectedColor
+                isSelected:
+                    viewModel.state.selectedImages.contains(assetEntity),
+                selectedColor: viewModel.state.selectedColor
               ),
               builder: (context, state, child) {
                 return Container(
                   width: 28.0,
                   height: 28.0,
                   decoration: BoxDecoration(
-                    color: state.isSelected ? state.selectedColor : Colors.white70,
+                    color:
+                        state.isSelected ? state.selectedColor : Colors.white70,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color:
-                      state.isSelected ? Colors.transparent : Colors.black54,
+                      color: state.isSelected
+                          ? Colors.transparent
+                          : Colors.black54,
                       width: 2.5,
                     ),
                   ),
@@ -332,8 +540,9 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
                       style: TextStyle(
                         fontSize: 13.0,
                         fontWeight: FontWeight.bold,
-                        color:
-                        state.isSelected ? Colors.white : Colors.transparent,
+                        color: state.isSelected
+                            ? Colors.white
+                            : Colors.transparent,
                       ),
                     ),
                   ),
@@ -355,14 +564,7 @@ class _CustomImagePickerState extends State<CustomImagePicker> {
         child: GestureDetector(
           onTap: () {
             viewModel.setInitialIndexForFullScreen(assetEntity);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return const FullScreenImage();
-                },
-              ),
-            );
+            Navigator.pushNamed(context, '/fullImage');
           },
           child: Padding(
             padding: const EdgeInsets.all(5.0),

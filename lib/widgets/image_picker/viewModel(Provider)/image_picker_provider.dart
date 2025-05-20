@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -19,6 +20,11 @@ class ImagePickerState {
   final int pickerGridCount;
   RequestType requestType = RequestType.common;
   File? selectedFile;
+  final bool cameraLoading;
+  final List<AssetEntity> pageViewDisplayItems;
+  final AssetEntity? capturedAsset;
+  final bool appLifeResumed;
+  final bool isPoppedByCode;
 
   ImagePickerState({
     this.albumList = const [],
@@ -29,10 +35,15 @@ class ImagePickerState {
     this.isLoading = false,
     this.errorMessage,
     this.selectedFile,
+    this.cameraLoading = false,
+    this.pageViewDisplayItems = const [],
+    this.capturedAsset,
     required this.requestType,
     required this.selectedImages,
     required this.selectedColor,
     required this.pickerGridCount,
+    this.appLifeResumed = false,
+    this.isPoppedByCode = false,
   });
 
   ImagePickerState copyWith({
@@ -48,6 +59,11 @@ class ImagePickerState {
     Color? selectedColor,
     RequestType? requestType,
     File? selectedFile,
+    bool? cameraLoading,
+    List<AssetEntity>? pageViewDisplayItems,
+    AssetEntity? capturedAsset,
+    bool? appLifeResumed,
+    bool? isPoppedByCode,
   }) {
     return ImagePickerState(
       albumList: albumList ?? this.albumList,
@@ -62,6 +78,11 @@ class ImagePickerState {
       pickerGridCount: pickerGridCount ?? this.pickerGridCount,
       requestType: requestType ?? this.requestType,
       selectedFile: selectedFile ?? this.selectedFile,
+      cameraLoading: cameraLoading ?? this.cameraLoading,
+      pageViewDisplayItems: pageViewDisplayItems ?? this.pageViewDisplayItems,
+      capturedAsset: capturedAsset ?? this.capturedAsset,
+      appLifeResumed: appLifeResumed ?? this.appLifeResumed,
+      isPoppedByCode: isPoppedByCode ?? this.isPoppedByCode,
     );
   }
 }
@@ -70,12 +91,14 @@ class ImagePickerViewModel extends ChangeNotifier {
   final ImagePickerModel _model; //model 인스턴스
   ImagePickerState _state; //state 인스턴스, View 상태 관리
   late PageController _pageController;
+  late StreamController<bool> _btnController;
 
   static const platform = MethodChannel('com.example.camera/intent');
 
   ImagePickerState get state => _state; //외부에서 읽을 수 있도록 Getter 제공
   PageController get pageController => _pageController;
 
+  StreamController<bool> get btnController => _btnController;
 
   ImagePickerViewModel(this._model)
       : _state = ImagePickerState(
@@ -90,29 +113,109 @@ class ImagePickerViewModel extends ChangeNotifier {
         ) {
     init();
     _pageController = PageController(initialPage: _state.initialIndex);
+    _btnController = StreamController<bool>();
     platform.setMethodCallHandler(_handleMethodCall);
   }
 
   Future<void> openCamera() async {
-    await _model.openCamera();
-    _updateState(_state.copyWith(selectedFile: _model.selectedFile));
+    try {
+      clearCapturedAsset();
+      await _model.openCamera();
+      _updateState(_state.copyWith(selectedFile: _model.selectedFile));
+    } on PlatformException catch (e) {
+      _updateState(_state.copyWith(errorMessage: e.message));
+    } catch (e) {
+      _updateState(_state.copyWith(errorMessage: e.toString()));
+    }
   }
 
   Future<void> _handleMethodCall(MethodCall call) async {
     switch (call.method) {
       case 'imageCaptured':
-        final path = call.arguments as String?;
-        if (path != null) {
-          _model.setSelectedFile(File(path));
-          _updateState(_state.copyWith(selectedFile: _model.selectedFile));
+        final String? imagePath = call.arguments as String?;
+        clearCapturedAsset();
+        if (imagePath != null) {
+          AssetEntity? capturedAsset;
+          try {
+            capturedAsset =
+                await PhotoManager.editor.saveImageWithPath(imagePath);
+            _updateState(_state.copyWith(capturedAsset: capturedAsset));
+          } catch (e) {
+            _updateState(_state.copyWith(errorMessage: e.toString()));
+            return;
+          }
+
+          if (capturedAsset != null) {
+            _model.setSelectedFile(File(imagePath));
+            selectedImage(capturedAsset);
+            _updateState(_state.copyWith(
+                cameraLoading: true,
+                selectedImages: _state.selectedImages,
+                pageViewDisplayItems: _state.selectedImages,
+                capturedAsset: capturedAsset));
+
+            setInitialIndexForCameraImage();
+          } else {
+            _updateState(_state.copyWith(
+                cameraLoading: false, errorMessage: '이미지 객체 생성 실패'));
+          }
+        } else {
+          _updateState(_state.copyWith(
+              cameraLoading: false, errorMessage: '이미지 경로가 없습니다.'));
         }
+        break;
+
+      case 'cameraCanceled':
+        _updateState(_state.copyWith(cameraLoading: false, selectedFile: null));
+        break;
+
+      case 'cameraError':
+        final String? errorMessage = call.arguments as String?;
+        _updateState(_state.copyWith(
+            cameraLoading: false,
+            selectedFile: null,
+            errorMessage: errorMessage));
         break;
     }
   }
 
+  Future<void> clearCapturedAsset() async {
+    _updateState(_state.copyWith(
+        selectedFile: null,
+        capturedAsset: null,
+        pageViewDisplayItems: _state.selectedImages));
+  }
+
+  Future<void> onCameraNavigationDone() async {
+    if (_state.cameraLoading) {
+      if (_state.capturedAsset != null) {
+        _model.removeSelectedImage(state.capturedAsset!);
+      }
+      _updateState(_state.copyWith(
+          selectedImages: _model.selectedImages,
+          selectedFile: null,
+          cameraLoading: false,
+          capturedAsset: null));
+      openCamera();
+      loadAlbumList(state.requestType.toString());
+    }
+  }
+
+  Future<void> setCameraLoading() async {
+    _updateState(_state.copyWith(cameraLoading: false));
+  }
+
+  void handleAppResumed() {
+    _updateState(_state.copyWith(appLifeResumed: false));
+  }
+
+  void handleAppPaused() {
+    _updateState(_state.copyWith(appLifeResumed: true));
+  }
+
   Future<void> init() async {
-    print("가나다라마바사아자차카타ㅏ하");
-    _updateState(_state.copyWith(isLoading: true, errorMessage: null, requestType: _model.requestType));
+    _updateState(_state.copyWith(
+        isLoading: true, errorMessage: null, requestType: _model.requestType));
     try {
       _updateState(_state.copyWith(
           albumList: _model.albumList,
@@ -125,12 +228,24 @@ class ImagePickerViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> loadAlbumList(RequestType requestType) async {
-    _model.setRequestType(requestType);
-    _updateState(_state.copyWith(requestType: _model.requestType));
+  Future<void> loadAlbumList(String requestType) async {
+    switch (requestType) {
+      case 'common':
+        setRequestType(RequestType.common);
+        break;
+      case 'image':
+        setRequestType(RequestType.image);
+        break;
+      case 'video':
+        setRequestType(RequestType.video);
+        break;
+    }
     try {
       await _model.loadAlbumList();
-      _updateState(_state.copyWith(albumList: _model.albumList, selectedAlbum: _model.selectedAlbum, assetList: _model.assetList));
+      _updateState(_state.copyWith(
+          albumList: _model.albumList,
+          selectedAlbum: _model.selectedAlbum,
+          assetList: _model.assetList));
     } catch (e) {
       _updateState(_state.copyWith(errorMessage: e.toString()));
     }
@@ -155,9 +270,11 @@ class ImagePickerViewModel extends ChangeNotifier {
     if (!_model.selectedImages.contains(image)) {
       if (_model.selectedImages.length < _state.maxSelectableCount) {
         _model.addSelectedImage(image);
+        print('$image 이미지 추가욧');
       }
     } else {
       _model.removeSelectedImage(image);
+      print('$image 이미지 삭제욧');
     }
     _updateState(_state.copyWith(selectedImages: _model.selectedImages));
   }
@@ -175,6 +292,16 @@ class ImagePickerViewModel extends ChangeNotifier {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (_pageController.hasClients) {
         _pageController.jumpToPage(_state.initialIndex);
+      }
+    });
+  }
+
+  void setInitialIndexForCameraImage() {
+    _updateState(
+        _state.copyWith(initialIndex: _state.pageViewDisplayItems.length - 1));
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(_state.pageViewDisplayItems.length - 1);
       }
     });
   }
@@ -206,7 +333,8 @@ class ImagePickerViewModel extends ChangeNotifier {
     _updateState(_state.copyWith(selectedImages: _model.selectedImages));
   }
 
-  void setRequestType(RequestType requestType) { // 추가된 부분
+  void setRequestType(RequestType requestType) {
+    // 추가된 부분
     _model.setRequestType(requestType);
     _updateState(_state.copyWith(requestType: _model.requestType));
   }
@@ -218,7 +346,42 @@ class ImagePickerViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
+    platform.setMethodCallHandler(null);
     _pageController.dispose();
+    _btnController.close();
     super.dispose();
+  }
+
+  final Map<Object, int> _lastThrottledActionTimes = {};
+
+  // 지정된 액션에 쓰로틀을 적용하여 실행하는 함수
+  // actionIdentifier: 쓰로틀을 적용할 액션을 구분하는 고유한 키 (예: 'send_button_tap')
+  // action: 실제로 실행할 비동기 액션 (Future<void>를 반환하는 함수)
+  // throttleDuration: 쓰로틀 시간 간격 (이 시간 내에는 액션이 최대 한 번만 실행됨)
+  Future<void> runThrottled(Object actionIdentifier,
+      Future<void> Function() action, Duration throttleDuration) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final lastExecutionTime = _lastThrottledActionTimes[actionIdentifier] ?? 0;
+
+    // 지정된 쓰로틀 시간 간격이 지났는지 확인
+    if (now - lastExecutionTime >= throttleDuration.inMilliseconds) {
+      // 시간 간격이 지났으면 액션 실행
+      _lastThrottledActionTimes[actionIdentifier] = now; // 마지막 실행 시간 업데이트
+
+      try {
+        await action(); // 실제 액션(비동기 함수) 실행을 기다림
+      } catch (e) {
+        // 액션 실행 중 발생한 오류 처리 (필요에 따라 로깅, 오류 상태 업데이트 등)
+        print("Throttled action $actionIdentifier failed: $e");
+        // 오류 발생 시에도 쓰로틀 상태는 유지될 수 있습니다.
+      }
+    } else {
+      // 시간 간격 내에 있으면 액션 실행하지 않고 무시
+      print("Action $actionIdentifier throttled.");
+    }
+  }
+
+  void setPoppedByCode(bool value) {
+    _updateState(_state.copyWith(isPoppedByCode: value));
   }
 }

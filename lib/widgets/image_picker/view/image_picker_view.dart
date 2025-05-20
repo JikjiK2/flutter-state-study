@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_state_mvvm/widgets/image_picker/viewModel(Provider)/image_picker_provider.dart';
-import 'package:flutter_state_mvvm/widgets/image_picker/view/image_picker.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +12,7 @@ class ImagePicker extends StatefulWidget {
   final bool isGrid;
   final int pickerGridCount;
   final double removeButtonSize;
-  final RequestType requestType;
+  final String requestType;
   final EdgeInsets padding;
   final double imageSize;
   final double imageSpacing;
@@ -28,7 +27,7 @@ class ImagePicker extends StatefulWidget {
     this.isGrid = false,
     this.pickerGridCount = 3,
     this.removeButtonSize = 20.0,
-    this.requestType = RequestType.common,
+    this.requestType = "common",
     this.padding = const EdgeInsets.all(2.0),
     this.imageSize = 150.0,
     this.imageSpacing = 5.0,
@@ -46,10 +45,19 @@ class _ImagePickerState extends State<ImagePicker> {
       selector: (context, viewModel) => viewModel.state.selectedImages,
       builder: (context, selectedImages, child) {
         return Scaffold(
+          appBar: AppBar(
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    context.read<ImagePickerViewModel>().clearSelectedImages();
+                  },
+                  child: const Text('선택 완료')),
+            ],
+          ),
           body: widget.isGrid
               ? _buildGridView(selectedImages)
               : _buildListView(selectedImages),
-          floatingActionButton: _buildFloatingActionButton(),
         );
       },
     );
@@ -71,16 +79,63 @@ class _ImagePickerState extends State<ImagePicker> {
 
   // ListView 위젯 분리
   Widget _buildListView(List<AssetEntity> selectedImages) {
-    return SizedBox(
-      height: widget.imageSize,
-      child: ListView.builder(
-        physics: const BouncingScrollPhysics(),
-        scrollDirection: Axis.horizontal,
-        itemCount: selectedImages.length,
-        itemBuilder: (context, index) {
-          AssetEntity assetEntity = selectedImages[index];
-          return _buildAssetItem(assetEntity);
-        },
+    return Container(
+      color: Colors.grey,
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.only(right: 10.0),
+            child: GestureDetector(
+              onTap: () async {
+                context.read<ImagePickerViewModel>().runThrottled(
+                  'onImagePickerButtonPressed',
+                  () async {
+                    final viewModel = context.read<ImagePickerViewModel>();
+                    await viewModel.loadAlbumList(widget.requestType);
+                    viewModel.setGridCount(widget.pickerGridCount);
+                    viewModel.setSelectedColor(widget.selectedColor);
+                    viewModel.setMaxSelectableCount(widget.maxSelectableCount);
+                    if (widget.isClear) {
+                      await viewModel.init();
+                      viewModel.clearSelectedImages();
+                    }
+                    await viewModel.init();
+                    if (!mounted) return;
+                    Navigator.pushNamed(
+                      context,
+                      '/imagePicker',
+                    );
+                  },
+                  const Duration(milliseconds: 500),
+                );
+              },
+              child: Container(
+                width: widget.imageSize,
+                height: widget.imageSize,
+                color: Colors.black87,
+                child: const Icon(
+                  Icons.camera_alt,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: SizedBox(
+              height: widget.imageSize,
+              child: ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                scrollDirection: Axis.horizontal,
+                itemCount: selectedImages.length,
+                itemBuilder: (context, index) {
+                  AssetEntity assetEntity = selectedImages[index];
+                  return _buildAssetItem(assetEntity);
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -194,38 +249,6 @@ class _ImagePickerState extends State<ImagePicker> {
           ),
         ),
       ),
-    );
-  }
-
-  // FloatingActionButton 위젯 분리
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton(
-      onPressed: () async {
-        final viewModel = context.read<ImagePickerViewModel>();
-        await viewModel.loadAlbumList(widget.requestType);
-        viewModel.setGridCount(widget.pickerGridCount);
-        viewModel.setSelectedColor(widget.selectedColor);
-        viewModel.setMaxSelectableCount(widget.maxSelectableCount);
-        if (widget.isClear) {
-          await viewModel.init();
-          viewModel.clearSelectedImages();
-        }
-        await viewModel.init();
-
-        if (widget.isClear) {
-          viewModel.clearSelectedImages();
-        }
-        if (!mounted) return;
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) {
-              return const CustomImagePicker();
-            },
-          ),
-        );
-      },
-      child: const Icon(Icons.image),
     );
   }
 }

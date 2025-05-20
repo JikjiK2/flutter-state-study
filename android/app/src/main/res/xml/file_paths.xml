@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- getExternalFilesDir(Environment.DIRECTORY_PICTURES)에 해당하는 경로 -->
+    <!-- name="my_images"는 Kotlin 코드에서 FileProvider.getUriForFile 호출 시 사용될 이름입니다. -->
+    <!-- path="Pictures/"는 getExternalFilesDir의 하위 디렉토리인 Pictures 폴더를 의미합니다. -->
+    <external-files-path name="my_images" path="Pictures/"/>
+
+    <!-- 다른 경로 타입도 필요하다면 여기에 추가합니다. -->
+    <!-- 예시: 앱 캐시 디렉토리 (context.cacheDir) -->
+    <!-- <cache-path name="my_cache_images" path="/"/> -->
+</paths>

@@ -11,7 +11,8 @@ class FullScreenImage extends StatefulWidget {
   State<FullScreenImage> createState() => _FullScreenImageState();
 }
 
-class _FullScreenImageState extends State<FullScreenImage> with WidgetsBindingObserver {
+class _FullScreenImageState extends State<FullScreenImage>
+    with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,17 +36,21 @@ class _FullScreenImageState extends State<FullScreenImage> with WidgetsBindingOb
               padding: const EdgeInsets.only(right: 22.0),
               child: Row(
                 children: [
-                  Text(
-                    '$selectedCount',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15.0),
-                  ),
-                  const SizedBox(
-                    width: 10.0,
-                  ),
-                  _buildSendButton(context),
+                  if (selectedCount > 0) ...[
+                    Text(
+                      '$selectedCount',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15.0),
+                    ),
+                    const SizedBox(
+                      width: 10.0,
+                    ),
+                    _buildSendButton(context, false)
+                  ] else ...[
+                    _buildSendButton(context, true)
+                  ]
                 ],
               ),
             );
@@ -56,17 +61,24 @@ class _FullScreenImageState extends State<FullScreenImage> with WidgetsBindingOb
   }
 
   // App Bar 전송 버튼
-  GestureDetector _buildSendButton(BuildContext context) {
+  GestureDetector _buildSendButton(BuildContext context, bool empty) {
     return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-      },
-      child: const Text(
-        '전송',
-        style: TextStyle(
-            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15.0),
-      ),
-    );
+        onTap: empty
+            ? null
+            : () {
+          context.read<ImagePickerViewModel>().setPoppedByCode(true);
+          Navigator.popUntil(context, ModalRoute.withName('/imagePickerView'));
+        },
+        child: Text(
+          '전송',
+          style: TextStyle(
+            // empty 값에 따라 color만 조건부로 설정
+            color: empty ? Colors.grey : Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 15.0,
+          ),
+        ),
+      );
   }
 
   // Body 위젯

@@ -33,6 +33,7 @@ class _ProfileViewState extends State<ProfileView> {
             onPressed: () {
               // 프로필 아이콘 클릭 시 동작
               print('체크 아이콘 클릭됨');
+              Navigator.pushNamed(context, '/imagePickerView');
             },
           ),
         ],
