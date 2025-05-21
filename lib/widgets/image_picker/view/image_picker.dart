@@ -335,7 +335,7 @@ class _CustomImagePickerState extends State<CustomImagePicker>
           child: GestureDetector(
             onTap: () {
               viewModel.selectedImage(assetEntity);
-              if (state.selectedImagesLength >= state.maxSelectableCount) {
+              if (state.isSelected == false && (state.selectedImagesLength >= state.maxSelectableCount)) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content:

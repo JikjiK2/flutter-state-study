@@ -38,27 +38,60 @@ class ImagePicker extends StatefulWidget {
   State<ImagePicker> createState() => _ImagePickerState();
 }
 
-class _ImagePickerState extends State<ImagePicker> {
+class _ImagePickerState extends State<ImagePicker> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this); // 옵저버 해제
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      context.read<ImagePickerViewModel>().handleAppResumed();
+    }
+    if (state == AppLifecycleState.paused) {
+      context.read<ImagePickerViewModel>().handleAppPaused();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Selector<ImagePickerViewModel, List<AssetEntity>>(
-      selector: (context, viewModel) => viewModel.state.selectedImages,
-      builder: (context, selectedImages, child) {
-        return Scaffold(
-          appBar: AppBar(
-            actions: [
-              TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    context.read<ImagePickerViewModel>().clearSelectedImages();
-                  },
-                  child: const Text('선택 완료')),
-            ],
-          ),
-          body: widget.isGrid
-              ? _buildGridView(selectedImages)
-              : _buildListView(selectedImages),
-        );
+    return Selector<ImagePickerViewModel,
+        ({List<AssetEntity> selectedImages, bool appLifeResumed})>(
+      selector: (context, viewModel) => (
+        selectedImages: viewModel.state.selectedImages,
+        appLifeResumed: viewModel.state.appLifeResumed
+      ),
+      builder: (context, state, child) {
+        if (state.appLifeResumed) {
+          return const Scaffold();
+        } else {
+          return Scaffold(
+            appBar: AppBar(
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      context
+                          .read<ImagePickerViewModel>()
+                          .clearSelectedImages();
+                    },
+                    child: const Text('선택 완료')),
+              ],
+            ),
+            body: widget.isGrid
+                ? _buildGridView(state.selectedImages)
+                : _buildListView(state.selectedImages),
+          );
+        }
       },
     );
   }
@@ -114,9 +147,15 @@ class _ImagePickerState extends State<ImagePicker> {
                 width: widget.imageSize,
                 height: widget.imageSize,
                 color: Colors.black87,
-                child: const Icon(
-                  Icons.camera_alt,
-                  color: Colors.white,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                    ),
+                    Text('${selectedImages.length}/${widget.maxSelectableCount}', style: const TextStyle(color: Colors.white)),
+                  ],
                 ),
               ),
             ),

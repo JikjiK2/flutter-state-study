@@ -270,11 +270,9 @@ class ImagePickerViewModel extends ChangeNotifier {
     if (!_model.selectedImages.contains(image)) {
       if (_model.selectedImages.length < _state.maxSelectableCount) {
         _model.addSelectedImage(image);
-        print('$image 이미지 추가욧');
       }
     } else {
       _model.removeSelectedImage(image);
-      print('$image 이미지 삭제욧');
     }
     _updateState(_state.copyWith(selectedImages: _model.selectedImages));
   }
