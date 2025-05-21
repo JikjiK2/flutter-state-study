@@ -511,22 +511,23 @@ class _CustomImagePickerState extends State<CustomImagePicker>
           child: Padding(
             padding: const EdgeInsets.all(7.0),
             child: Selector<ImagePickerViewModel,
-                ({bool isSelected, Color selectedColor})>(
+                ({List<AssetEntity> selectedImages, Color selectedColor})>(
               selector: (context, viewModel) => (
-                isSelected:
-                    viewModel.state.selectedImages.contains(assetEntity),
+                selectedImages:
+                    viewModel.state.selectedImages,
                 selectedColor: viewModel.state.selectedColor
               ),
               builder: (context, state, child) {
+                final isSelected = state.selectedImages.contains(assetEntity);
                 return Container(
                   width: 28.0,
                   height: 28.0,
                   decoration: BoxDecoration(
                     color:
-                        state.isSelected ? state.selectedColor : Colors.white70,
+                        isSelected ? state.selectedColor : Colors.white70,
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: state.isSelected
+                      color: isSelected
                           ? Colors.transparent
                           : Colors.black54,
                       width: 2.5,
@@ -534,13 +535,13 @@ class _CustomImagePickerState extends State<CustomImagePicker>
                   ),
                   child: Center(
                     child: Text(
-                      state.isSelected
+                      isSelected
                           ? "${viewModel.state.selectedImages.indexOf(assetEntity) + 1}"
                           : "",
                       style: TextStyle(
                         fontSize: 13.0,
                         fontWeight: FontWeight.bold,
-                        color: state.isSelected
+                        color: isSelected
                             ? Colors.white
                             : Colors.transparent,
                       ),
