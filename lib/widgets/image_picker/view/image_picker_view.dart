@@ -1,36 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_state_mvvm/widgets/image_picker/viewModel(Provider)/image_picker_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:photo_manager_image_provider/photo_manager_image_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_state_mvvm/widgets/image_picker/view/image_picker.dart';
+import 'package:flutter_state_mvvm/widgets/image_picker/viewModel(Provider)/image_picker_provider.dart';
 
 class ImagePicker extends StatefulWidget {
-  final bool isClear;
-  final int viewGridCount;
   final int maxSelectableCount;
   final Color selectedColor;
-  final bool isGrid;
   final int pickerGridCount;
   final double removeButtonSize;
   final String requestType;
-  final EdgeInsets padding;
-  final double imageSize;
-  final double imageSpacing;
   final bool showCameraIcon;
 
   const ImagePicker({
     super.key,
-    this.isClear = true,
-    this.viewGridCount = 3,
     this.maxSelectableCount = 10,
     this.selectedColor = Colors.blue,
-    this.isGrid = false,
     this.pickerGridCount = 3,
     this.removeButtonSize = 20.0,
     this.requestType = "common",
-    this.padding = const EdgeInsets.all(2.0),
-    this.imageSize = 150.0,
-    this.imageSpacing = 5.0,
     this.showCameraIcon = true,
   });
 
@@ -39,15 +28,18 @@ class ImagePicker extends StatefulWidget {
 }
 
 class _ImagePickerState extends State<ImagePicker> with WidgetsBindingObserver {
+  late ImagePickerViewModel _viewModel;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _viewModel = context.read<ImagePickerViewModel>();
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this); // 옵저버 해제
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -55,19 +47,19 @@ class _ImagePickerState extends State<ImagePicker> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      context.read<ImagePickerViewModel>().handleAppResumed();
+      _viewModel.handleAppResumed();
     }
     if (state == AppLifecycleState.paused) {
-      context.read<ImagePickerViewModel>().handleAppPaused();
+      _viewModel.handleAppPaused();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Selector<ImagePickerViewModel,
-        ({List<AssetEntity> selectedImages, bool appLifeResumed})>(
+        ({List<AssetEntity> selectedAssets, bool appLifeResumed})>(
       selector: (context, viewModel) => (
-        selectedImages: viewModel.state.selectedImages,
+        selectedAssets: viewModel.state.selectedAssets,
         appLifeResumed: viewModel.state.appLifeResumed
       ),
       builder: (context, state, child) {
@@ -76,64 +68,37 @@ class _ImagePickerState extends State<ImagePicker> with WidgetsBindingObserver {
         } else {
           return Scaffold(
             appBar: AppBar(
-              actions: [
-                TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      context
-                          .read<ImagePickerViewModel>()
-                          .clearSelectedImages();
-                    },
-                    child: const Text('선택 완료')),
-              ],
+              automaticallyImplyLeading: false,
+              title: const Text(
+                "Image Picker View Example",
+                style: TextStyle(fontSize: 20.0),
+              ),
             ),
-            body: widget.isGrid
-                ? _buildGridView(state.selectedImages)
-                : _buildListView(state.selectedImages),
+            body: _buildListView(state.selectedAssets),
           );
         }
       },
     );
   }
 
-  // GridView 위젯 분리
-  Widget _buildGridView(List<AssetEntity> selectedImages) {
-    return GridView.builder(
-      physics: const BouncingScrollPhysics(),
-      itemCount: selectedImages.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: widget.viewGridCount),
-      itemBuilder: (context, index) {
-        AssetEntity assetEntity = selectedImages[index];
-        return _buildAssetItem(assetEntity);
-      },
-    );
-  }
-
-  // ListView 위젯 분리
-  Widget _buildListView(List<AssetEntity> selectedImages) {
+  Widget _buildListView(List<AssetEntity> selectedAssets) {
     return Container(
       color: Colors.grey,
       padding: const EdgeInsets.all(8.0),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.only(right: 10.0),
+            padding: const EdgeInsets.only(right: 5.0),
             child: GestureDetector(
               onTap: () async {
-                context.read<ImagePickerViewModel>().runThrottled(
+                _viewModel.runThrottled(
                   'onImagePickerButtonPressed',
                   () async {
-                    final viewModel = context.read<ImagePickerViewModel>();
-                    await viewModel.loadAlbumList(widget.requestType);
-                    viewModel.setGridCount(widget.pickerGridCount);
-                    viewModel.setSelectedColor(widget.selectedColor);
-                    viewModel.setMaxSelectableCount(widget.maxSelectableCount);
-                    if (widget.isClear) {
-                      await viewModel.init();
-                      viewModel.clearSelectedImages();
-                    }
-                    await viewModel.init();
+                    _viewModel.clearSelectedAssets();
+                    await _viewModel.loadAlbumListAndAssets();
+                    _viewModel.setGridCount(widget.pickerGridCount);
+                    _viewModel.setSelectedColor(widget.selectedColor);
+                    _viewModel.setMaxSelectableCount(widget.maxSelectableCount);
                     if (!mounted) return;
                     Navigator.pushNamed(
                       context,
@@ -144,8 +109,8 @@ class _ImagePickerState extends State<ImagePicker> with WidgetsBindingObserver {
                 );
               },
               child: Container(
-                width: widget.imageSize,
-                height: widget.imageSize,
+                width: 150.0,
+                height: 150.0,
                 color: Colors.black87,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -154,7 +119,9 @@ class _ImagePickerState extends State<ImagePicker> with WidgetsBindingObserver {
                       Icons.camera_alt,
                       color: Colors.white,
                     ),
-                    Text('${selectedImages.length}/${widget.maxSelectableCount}', style: const TextStyle(color: Colors.white)),
+                    Text(
+                        '${selectedAssets.length}/${widget.maxSelectableCount}',
+                        style: const TextStyle(color: Colors.white)),
                   ],
                 ),
               ),
@@ -162,13 +129,13 @@ class _ImagePickerState extends State<ImagePicker> with WidgetsBindingObserver {
           ),
           Expanded(
             child: SizedBox(
-              height: widget.imageSize,
+              height: 150.0,
               child: ListView.builder(
                 physics: const BouncingScrollPhysics(),
                 scrollDirection: Axis.horizontal,
-                itemCount: selectedImages.length,
+                itemCount: selectedAssets.length,
                 itemBuilder: (context, index) {
-                  AssetEntity assetEntity = selectedImages[index];
+                  AssetEntity assetEntity = selectedAssets[index];
                   return _buildAssetItem(assetEntity);
                 },
               ),
@@ -179,14 +146,13 @@ class _ImagePickerState extends State<ImagePicker> with WidgetsBindingObserver {
     );
   }
 
-  // 이미지 아이템 위젯 분리
   Widget _buildAssetItem(AssetEntity assetEntity) {
     return Padding(
-      padding: EdgeInsets.only(right: widget.imageSpacing),
+      padding: const EdgeInsets.only(right: 5.0),
       child: SizedBox(
-        width: widget.imageSize,
+        width: 150.0,
         child: Padding(
-          padding: widget.padding,
+          padding: const EdgeInsets.all(3.0),
           child: Stack(
             children: [
               Positioned.fill(
@@ -206,7 +172,7 @@ class _ImagePickerState extends State<ImagePicker> with WidgetsBindingObserver {
                 ),
               ),
               if (assetEntity.type == AssetType.video)
-                _buildVideoDuration(assetEntity),
+                VideoDurationWidget(assetEntity: assetEntity),
               _buildRemoveButton(assetEntity),
             ],
           ),
@@ -215,66 +181,13 @@ class _ImagePickerState extends State<ImagePicker> with WidgetsBindingObserver {
     );
   }
 
-  // 동영상 길이 표시 위젯 분리
-  Widget _buildVideoDuration(AssetEntity assetEntity) {
-    return Positioned.fill(
-      child: Align(
-        alignment: Alignment.bottomRight,
-        child: Padding(
-          padding: const EdgeInsets.all(5.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.black38,
-              borderRadius: BorderRadius.circular(3.0),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: FutureBuilder<int?>(
-              future: assetEntity.durationWithOptions(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  final duration = snapshot.data!;
-                  int seconds = duration % 60;
-                  int minutes = (duration % 3600) ~/ 60;
-                  int hours = duration ~/ 3600;
-                  String formattedHours = hours.toString().padLeft(2, '0');
-                  String formattedMinutes = minutes.toString().padLeft(2, '0');
-                  String formattedSeconds = seconds.toString().padLeft(2, '0');
-                  if (hours == 0) {
-                    return Text(
-                      '$formattedMinutes:$formattedSeconds',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w400),
-                    );
-                  } else {
-                    return Text(
-                      '$formattedHours:$formattedMinutes:$formattedSeconds',
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.w400),
-                    );
-                  }
-                } else {
-                  return const SizedBox();
-                }
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // 이미지 제거 버튼 위젯 분리
   Widget _buildRemoveButton(AssetEntity assetEntity) {
     return Positioned(
       top: 5,
       right: 5,
       child: GestureDetector(
         onTap: () {
-          context.read<ImagePickerViewModel>().removeImage(assetEntity);
+          _viewModel.toggleImageSelection(assetEntity);
         },
         child: Container(
           decoration: const BoxDecoration(

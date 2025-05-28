@@ -3,28 +3,38 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_state_mvvm/widgets/image_picker/model/image_picker_model.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:flutter_state_mvvm/widgets/image_picker/model/image_picker_model.dart';
 
 //상태 클래스
 class ImagePickerState {
   final List<AssetPathEntity> albumList;
   final List<AssetEntity> assetList;
   final AssetPathEntity? selectedAlbum;
+
   final int maxSelectableCount;
-  final int initialIndex;
-  final bool isLoading;
-  final String? errorMessage;
-  final List<AssetEntity> selectedImages;
   final Color selectedColor;
   final int pickerGridCount;
-  RequestType requestType = RequestType.common;
-  File? selectedFile;
+  final RequestType requestType;
+
+  final bool isLoading;
+  final String? errorMessage;
+
+  final List<AssetEntity> selectedAssets;
+
+  final int initialIndex;
+
   final bool cameraLoading;
-  final List<AssetEntity> pageViewDisplayItems;
+
+  final File? selectedFile;
   final AssetEntity? capturedAsset;
+  final List<AssetEntity> pageViewDisplayItems;
+
   final bool appLifeResumed;
+
   final bool isPoppedByCode;
+
+  final Map<String, int> selectedAssetIndexMap;
 
   ImagePickerState({
     this.albumList = const [],
@@ -38,33 +48,43 @@ class ImagePickerState {
     this.cameraLoading = false,
     this.pageViewDisplayItems = const [],
     this.capturedAsset,
-    required this.requestType,
-    required this.selectedImages,
-    required this.selectedColor,
-    required this.pickerGridCount,
+    this.requestType = RequestType.common,
+    this.selectedAssets = const [],
+    this.selectedColor = Colors.blue,
+    this.pickerGridCount = 3,
     this.appLifeResumed = false,
     this.isPoppedByCode = false,
+    required this.selectedAssetIndexMap,
   });
 
   ImagePickerState copyWith({
     List<AssetPathEntity>? albumList,
     List<AssetEntity>? assetList,
-    List<AssetEntity>? selectedImages,
+    List<AssetEntity>? selectedAssets,
     AssetPathEntity? selectedAlbum,
     int? maxSelectableCount,
     int? initialIndex,
     bool? isLoading,
     String? errorMessage,
+    bool removeErrorMessage = false,
     int? pickerGridCount,
     Color? selectedColor,
     RequestType? requestType,
     File? selectedFile,
+    bool clearSelectedFile = false,
     bool? cameraLoading,
     List<AssetEntity>? pageViewDisplayItems,
     AssetEntity? capturedAsset,
+    bool clearCapturedAsset = false,
     bool? appLifeResumed,
     bool? isPoppedByCode,
   }) {
+    final newSelectedAssets = selectedAssets ?? this.selectedAssets;
+    final newIndexMap = <String, int>{};
+    for (int i = 0; i < newSelectedAssets.length; i++) {
+      newIndexMap[newSelectedAssets[i].id] = i;
+    }
+
     return ImagePickerState(
       albumList: albumList ?? this.albumList,
       assetList: assetList ?? this.assetList,
@@ -72,133 +92,276 @@ class ImagePickerState {
       maxSelectableCount: maxSelectableCount ?? this.maxSelectableCount,
       initialIndex: initialIndex ?? this.initialIndex,
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage ?? this.errorMessage,
-      selectedImages: selectedImages ?? this.selectedImages,
+      errorMessage:
+          removeErrorMessage ? null : errorMessage ?? this.errorMessage,
       selectedColor: selectedColor ?? this.selectedColor,
       pickerGridCount: pickerGridCount ?? this.pickerGridCount,
       requestType: requestType ?? this.requestType,
-      selectedFile: selectedFile ?? this.selectedFile,
+      selectedFile:
+          clearSelectedFile ? null : selectedFile ?? this.selectedFile,
       cameraLoading: cameraLoading ?? this.cameraLoading,
       pageViewDisplayItems: pageViewDisplayItems ?? this.pageViewDisplayItems,
-      capturedAsset: capturedAsset ?? this.capturedAsset,
+      capturedAsset:
+          clearCapturedAsset ? null : capturedAsset ?? this.capturedAsset,
       appLifeResumed: appLifeResumed ?? this.appLifeResumed,
       isPoppedByCode: isPoppedByCode ?? this.isPoppedByCode,
+      selectedAssets: selectedAssets ?? newSelectedAssets,
+      selectedAssetIndexMap: newIndexMap,
     );
   }
 }
 
 class ImagePickerViewModel extends ChangeNotifier {
-  final ImagePickerModel _model; //model 인스턴스
-  ImagePickerState _state; //state 인스턴스, View 상태 관리
+  final ImagePickerModel _model;
+  ImagePickerState _state;
+
   late PageController _pageController;
-  late StreamController<bool> _btnController;
 
-  static const platform = MethodChannel('com.example.camera/intent');
+  ImagePickerState get state => _state;
 
-  ImagePickerState get state => _state; //외부에서 읽을 수 있도록 Getter 제공
   PageController get pageController => _pageController;
 
-  StreamController<bool> get btnController => _btnController;
-
   ImagePickerViewModel(this._model)
-      : _state = ImagePickerState(
-          albumList: [],
-          selectedAlbum: null,
-          maxSelectableCount: 10,
-          initialIndex: 0,
-          pickerGridCount: 3,
-          selectedImages: [],
-          selectedColor: Colors.blue,
-          requestType: RequestType.common,
-        ) {
-    init();
-    _pageController = PageController(initialPage: _state.initialIndex);
-    _btnController = StreamController<bool>();
-    platform.setMethodCallHandler(_handleMethodCall);
+      : _state = ImagePickerState(selectedAssetIndexMap: {}) {
+    _initialize();
+  }
+
+  void Function(AssetEntity capturedAsset, String imagePath)? onImageCaptured;
+
+  void setOnImageCapturedCallback(
+      void Function(AssetEntity capturedAsset, String imagePath) callback) {
+    onImageCaptured = callback;
   }
 
   Future<void> openCamera() async {
+    clearCapturedAsset();
     try {
-      clearCapturedAsset();
-      await _model.openCamera();
-      _updateState(_state.copyWith(selectedFile: _model.selectedFile));
+      await _model.openNativeCamera();
     } on PlatformException catch (e) {
-      _updateState(_state.copyWith(errorMessage: e.message));
+      _updateState(_state.copyWith(
+          cameraLoading: false, errorMessage: "카메라 실행 오류: ${e.message}"));
     } catch (e) {
-      _updateState(_state.copyWith(errorMessage: e.toString()));
+      _updateState(_state.copyWith(
+          cameraLoading: false, errorMessage: "오류 발생: ${e.toString()}"));
     }
   }
 
   Future<void> _handleMethodCall(MethodCall call) async {
+    final String? imagePath = call.arguments as String?;
     switch (call.method) {
       case 'imageCaptured':
-        final String? imagePath = call.arguments as String?;
-        clearCapturedAsset();
-        if (imagePath != null) {
-          AssetEntity? capturedAsset;
-          try {
-            capturedAsset =
-                await PhotoManager.editor.saveImageWithPath(imagePath);
-            _updateState(_state.copyWith(capturedAsset: capturedAsset));
-          } catch (e) {
-            _updateState(_state.copyWith(errorMessage: e.toString()));
-            return;
-          }
-
-          if (capturedAsset != null) {
-            _model.setSelectedFile(File(imagePath));
-            selectedImage(capturedAsset);
-            _updateState(_state.copyWith(
-                cameraLoading: true,
-                selectedImages: _state.selectedImages,
-                pageViewDisplayItems: _state.selectedImages,
-                capturedAsset: capturedAsset));
-
-            setInitialIndexForCameraImage();
-          } else {
-            _updateState(_state.copyWith(
-                cameraLoading: false, errorMessage: '이미지 객체 생성 실패'));
-          }
-        } else {
-          _updateState(_state.copyWith(
-              cameraLoading: false, errorMessage: '이미지 경로가 없습니다.'));
-        }
+        await _handleImageCaptured(imagePath);
         break;
-
       case 'cameraCanceled':
-        _updateState(_state.copyWith(cameraLoading: false, selectedFile: null));
+        _handleCameraCanceled();
         break;
-
       case 'cameraError':
-        final String? errorMessage = call.arguments as String?;
-        _updateState(_state.copyWith(
-            cameraLoading: false,
-            selectedFile: null,
-            errorMessage: errorMessage));
+        _handleCameraError(imagePath);
+        break;
+      case 'videoCaptured':
+        _handleVideoCaptured(imagePath);
         break;
     }
+  }
+
+  Future<void> openVideoCamera() async {
+    clearCapturedAsset();
+    try {
+      await _model.openNativeVideoCamera();
+    } on PlatformException catch (e) {
+      _updateState(_state.copyWith(
+          cameraLoading: false, errorMessage: "카메라 실행 오류: ${e.message}"));
+    } catch (e) {
+      _updateState(_state.copyWith(
+          cameraLoading: false, errorMessage: "오류 발생: ${e.toString()}"));
+    }
+  }
+
+  Future<void> _handleVideoCaptured(String? videoPath) async {
+    if (videoPath == null) {
+      _handleCameraError('videoPath is null');
+      return;
+    }
+    try {
+      final AssetEntity? capturedAsset =
+          await _model.handleCapturedVideo(videoPath);
+      if (capturedAsset != null) {
+        _addImageToSelection(capturedAsset, videoPath);
+      }
+    } catch (e) {
+      _handleCameraError(e.toString());
+    }
+  }
+
+  Future<void> _handleImageCaptured(String? imagePath) async {
+    if (imagePath == null) {
+      _handleCameraError('imagePath is null');
+      return;
+    }
+    try {
+      final AssetEntity? capturedAsset =
+          await _model.handleCapturedImage(imagePath);
+      if (capturedAsset != null) {
+        _addImageToSelection(capturedAsset, imagePath);
+      }
+    } catch (e) {
+      _handleCameraError(e.toString());
+    }
+  }
+
+  void _addImageToSelection(AssetEntity capturedAsset, String imagePath) {
+    final newSelectedImages = List<AssetEntity>.from(_state.selectedAssets);
+
+    if (newSelectedImages.length < _state.maxSelectableCount) {
+      newSelectedImages.add(capturedAsset);
+      _updateState(_state.copyWith(
+        capturedAsset: capturedAsset,
+        cameraLoading: false,
+        selectedAssets: newSelectedImages,
+        pageViewDisplayItems: newSelectedImages,
+        initialIndex: newSelectedImages.length - 1,
+      ));
+
+      onImageCaptured?.call(capturedAsset, imagePath);
+      navigateToCapturedImage(newSelectedImages.length - 1);
+    } else {
+      _handleMaximumSelectionExceeded();
+    }
+  }
+
+  void _handleMaximumSelectionExceeded() {
+    _updateState(_state.copyWith(
+        cameraLoading: false,
+        errorMessage: 'image_picker_max_selection_exceeded'));
+  }
+
+  void navigateToCapturedImage(int index) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(index);
+      }
+    });
+  }
+
+  void updateInitialIndex(int index) {
+    _updateState(_state.copyWith(initialIndex: index));
+  }
+
+  void _handleCameraCanceled() {
+    _updateState(_state.copyWith(cameraLoading: false));
+  }
+
+  void _handleCameraError(String? errorMessage) {
+    _updateState(
+        _state.copyWith(cameraLoading: false, errorMessage: 'camera_error'));
   }
 
   Future<void> clearCapturedAsset() async {
     _updateState(_state.copyWith(
-        selectedFile: null,
+        cameraLoading: true,
         capturedAsset: null,
-        pageViewDisplayItems: _state.selectedImages));
+        pageViewDisplayItems: _state.selectedAssets));
   }
 
   Future<void> onCameraNavigationDone() async {
-    if (_state.cameraLoading) {
+    if (!_state.cameraLoading) {
+      List<AssetEntity> updateSelectedAssets = List.from(_state.selectedAssets);
       if (_state.capturedAsset != null) {
-        _model.removeSelectedImage(state.capturedAsset!);
+        if (updateSelectedAssets.contains(_state.capturedAsset)) {
+          updateSelectedAssets.remove(_state.capturedAsset);
+        }
       }
       _updateState(_state.copyWith(
-          selectedImages: _model.selectedImages,
-          selectedFile: null,
+          selectedAssets: updateSelectedAssets,
           cameraLoading: false,
           capturedAsset: null));
+
       openCamera();
-      loadAlbumList(state.requestType.toString());
+      loadAlbumListAndAssets();
     }
+  }
+
+  Future<void> _initialize() async {
+    _pageController = PageController(initialPage: _state.initialIndex);
+    ImagePickerModel.platform.setMethodCallHandler(_handleMethodCall);
+    await loadAlbumListAndAssets();
+  }
+
+  Future<void> loadAlbumListAndAssets() async {
+    try {
+      final List<AssetPathEntity> albums;
+      albums = await _model.fetchAlbumList(_state.requestType);
+      List<AssetEntity> assetList = [];
+      AssetPathEntity? currentAlbum;
+
+      if (albums.isNotEmpty) {
+        currentAlbum = albums.first;
+        assetList = await _model.fetchAssetsForAlbum(currentAlbum);
+      }
+
+      _updateState(_state.copyWith(
+        isLoading: false,
+        albumList: albums,
+        selectedAlbum: currentAlbum,
+        assetList: assetList,
+      ));
+    } catch (e) {
+      _updateState(_state.copyWith(
+          isLoading: false,
+          errorMessage: "앨범 가져오기 및 앨범 요소 가져오기 오류 - ${e.toString()}"));
+    }
+  }
+
+  Future<void> changeAlbum(AssetPathEntity selectedAlbum) async {
+    _updateState(_state.copyWith(
+        isLoading: true, selectedAlbum: selectedAlbum, errorMessage: null));
+    try {
+      final List<AssetEntity> assets;
+      assets = await _model.fetchAssetsForAlbum(selectedAlbum);
+      _updateState(_state.copyWith(isLoading: false, assetList: assets));
+    } catch (e) {
+      _updateState(_state.copyWith(
+          isLoading: false, errorMessage: "앨범 변경 오류 - ${e.toString()}"));
+    }
+  }
+
+  void toggleImageSelection(AssetEntity image) async {
+    final List<AssetEntity> currentSelectedAssets;
+    currentSelectedAssets = List<AssetEntity>.from(_state.selectedAssets);
+    final isSelected =
+        currentSelectedAssets.any((element) => element.id == image.id);
+    if (isSelected) {
+      currentSelectedAssets.removeWhere((element) => element.id == image.id);
+    } else {
+      if (currentSelectedAssets.length < _state.maxSelectableCount) {
+        currentSelectedAssets.add(image);
+      }
+    }
+    _updateState(_state.copyWith(selectedAssets: currentSelectedAssets));
+  }
+
+  void setMaxSelectableCount(int count) {
+    if (count > 0) {
+      _updateState(_state.copyWith(maxSelectableCount: count));
+      if (_state.selectedAssets.length > count) {
+        final newSelected = _state.selectedAssets.sublist(0, count);
+        _updateState(_state.copyWith(selectedAssets: newSelected));
+      }
+    }
+  }
+
+  void prepareFullScreenView(
+      AssetEntity assetEntity, List<AssetEntity>? sourceList) {
+    final displayList = sourceList ?? _state.assetList;
+    int nInitialIndex = displayList.indexWhere((e) => e.id == assetEntity.id);
+    if (nInitialIndex == -1) nInitialIndex = 0;
+
+    _updateState(_state.copyWith(initialIndex: nInitialIndex));
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (_pageController.hasClients) {
+        _pageController.jumpToPage(_state.initialIndex);
+      }
+    });
   }
 
   Future<void> setCameraLoading() async {
@@ -213,128 +376,22 @@ class ImagePickerViewModel extends ChangeNotifier {
     _updateState(_state.copyWith(appLifeResumed: true));
   }
 
-  Future<void> init() async {
-    _updateState(_state.copyWith(
-        isLoading: true, errorMessage: null, requestType: _model.requestType));
-    try {
-      _updateState(_state.copyWith(
-          albumList: _model.albumList,
-          selectedAlbum: _model.selectedAlbum,
-          assetList: _model.assetList));
-    } catch (e) {
-      _updateState(_state.copyWith(errorMessage: e.toString()));
-    } finally {
-      _updateState(_state.copyWith(isLoading: false));
-    }
-  }
-
-  Future<void> loadAlbumList(String requestType) async {
-    switch (requestType) {
-      case 'common':
-        setRequestType(RequestType.common);
-        break;
-      case 'image':
-        setRequestType(RequestType.image);
-        break;
-      case 'video':
-        setRequestType(RequestType.video);
-        break;
-    }
-    try {
-      await _model.loadAlbumList();
-      _updateState(_state.copyWith(
-          albumList: _model.albumList,
-          selectedAlbum: _model.selectedAlbum,
-          assetList: _model.assetList));
-    } catch (e) {
-      _updateState(_state.copyWith(errorMessage: e.toString()));
-    }
-  }
-
-  // 2. 앨범 선택
-  Future<void> selectAlbum(AssetPathEntity selectedAlbum) async {
-    _updateState(_state.copyWith(isLoading: true, errorMessage: null));
-    try {
-      await _model.selectAlbum(selectedAlbum);
-      _updateState(_state.copyWith(
-          selectedAlbum: _model.selectedAlbum, assetList: _model.assetList));
-    } catch (e) {
-      _updateState(_state.copyWith(errorMessage: e.toString()));
-    } finally {
-      _updateState(_state.copyWith(isLoading: false));
-    }
-  }
-
-  // 4. 사진 선택 // 5. 선택된 사진 제거
-  void selectedImage(AssetEntity image) async {
-    if (!_model.selectedImages.contains(image)) {
-      if (_model.selectedImages.length < _state.maxSelectableCount) {
-        _model.addSelectedImage(image);
-      }
-    } else {
-      _model.removeSelectedImage(image);
-    }
-    _updateState(_state.copyWith(selectedImages: _model.selectedImages));
-  }
-
-  // 6. 선택된 사진의 최대 개수 설정
-  void setMaxSelectableCount(int count) {
-    _model.setMaxSelectableCount(count);
-    _updateState(_state.copyWith(maxSelectableCount: count));
-  }
-
-  // 7. 전체 화면 사진 보기 (초기 인덱스 설정)
-  void setInitialIndexForFullScreen(AssetEntity assetEntity) {
-    _model.setInitialIndexForFullScreen(assetEntity);
-    _updateState(_state.copyWith(initialIndex: _model.initialIndex));
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (_pageController.hasClients) {
-        _pageController.jumpToPage(_state.initialIndex);
-      }
-    });
-  }
-
-  void setInitialIndexForCameraImage() {
-    _updateState(
-        _state.copyWith(initialIndex: _state.pageViewDisplayItems.length - 1));
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      if (_pageController.hasClients) {
-        _pageController.jumpToPage(_state.pageViewDisplayItems.length - 1);
-      }
-    });
-  }
-
-  // 8. 사진 선택 완료 (선택된 사진 목록 반환)
-  List<AssetEntity> getSelectedPhotos() {
-    return _model.getSelectedPhotos();
-  }
-
   void setGridCount(int count) {
-    _model.setPickerGridCount(count);
-    _updateState(_state.copyWith(pickerGridCount: count));
+    if (count > 0) {
+      _updateState(_state.copyWith(pickerGridCount: count));
+    }
   }
 
-  // 선택 색상 설정
   void setSelectedColor(Color color) {
-    _model.setSelectedColor(color);
     _updateState(_state.copyWith(selectedColor: color));
   }
 
-  void removeImage(AssetEntity assetImage) {
-    _model.removeSelectedImage(assetImage);
-    _updateState(_state.copyWith(selectedImages: _model.selectedImages));
-  }
-
-  // 선택된 이미지 초기화
-  void clearSelectedImages() {
-    _model.clearSelectedImages();
-    _updateState(_state.copyWith(selectedImages: _model.selectedImages));
+  void clearSelectedAssets() {
+    _updateState(_state.copyWith(selectedAssets: []));
   }
 
   void setRequestType(RequestType requestType) {
-    // 추가된 부분
-    _model.setRequestType(requestType);
-    _updateState(_state.copyWith(requestType: _model.requestType));
+    _updateState(_state.copyWith(requestType: requestType));
   }
 
   void _updateState(ImagePickerState newState) {
@@ -342,11 +399,32 @@ class ImagePickerViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setPoppedByCode(bool value) {
+    if (_state.isPoppedByCode != value) {
+      _updateState(_state.copyWith(isPoppedByCode: value));
+    }
+  }
+
+  String? validateSelection() {
+    if (state.selectedAssets.isEmpty) {
+      return '이미지를 선택해주세요.';
+    }
+    return null;
+  }
+
+  /*Future<bool> completeSelection(BuildContext context) async {
+    final validationError = validateSelection();
+    if (validationError != null) {
+      return false;
+    }
+    setPoppedByCode(true);
+    return true;
+  }*/
+
   @override
   void dispose() {
-    platform.setMethodCallHandler(null);
+    ImagePickerModel.platform.setMethodCallHandler(null);
     _pageController.dispose();
-    _btnController.close();
     super.dispose();
   }
 
@@ -377,9 +455,5 @@ class ImagePickerViewModel extends ChangeNotifier {
       // 시간 간격 내에 있으면 액션 실행하지 않고 무시
       print("Action $actionIdentifier throttled.");
     }
-  }
-
-  void setPoppedByCode(bool value) {
-    _updateState(_state.copyWith(isPoppedByCode: value));
   }
 }
