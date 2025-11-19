@@ -15,4 +15,4 @@
 
 개선 사항
 
-    video 재생 및 image 및 video 편집 기능
+    image 및 video 편집 기능
